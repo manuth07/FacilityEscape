@@ -10,15 +10,17 @@ namespace FacilityEscape.AI.Common
         public int Priority { get; }
         public float Intensity { get; }
         public float EmittedAt { get; }
+        public bool IsGunfire { get; }
 
         public SoundEvent(Vector3 position, float hearingRadius, int priority, float intensity,
-            float? emittedAt = null)
+            float? emittedAt = null, bool isGunfire = false)
         {
             Position = position;
             HearingRadius = hearingRadius;
             Priority = priority;
             Intensity = intensity;
             EmittedAt = emittedAt ?? Time.time;
+            IsGunfire = isGunfire;
         }
     }
 
@@ -28,11 +30,11 @@ namespace FacilityEscape.AI.Common
         public static event Action<SoundEvent> Emitted;
 
         public static void Emit(Vector3 position, float hearingRadius,
-            int priority = 0, float intensity = 1f)
+            int priority = 0, float intensity = 1f, bool isGunfire = false)
         {
             if (hearingRadius <= 0f) return;
             Emitted?.Invoke(new SoundEvent(position, hearingRadius, priority,
-                Mathf.Max(0f, intensity)));
+                Mathf.Max(0f, intensity), isGunfire: isGunfire));
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
