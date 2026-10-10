@@ -103,3 +103,7 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
 .vscode/
+
+Assets/_Recovery/
+
+Assets/_Recovery.meta
