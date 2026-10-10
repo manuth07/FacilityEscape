@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using FacilityEscape.AI.Common;
 
 namespace FacilityEscape.AI.Hunter
 {
@@ -8,7 +9,7 @@ namespace FacilityEscape.AI.Hunter
     [RequireComponent(typeof(NavMeshAgent), typeof(HunterPatrol))]
     public sealed class HunterAI : MonoBehaviour
     {
-        public enum HunterState { PATROL, CHASE, SEARCH_LAST_KNOWN, SEARCH_AREA }
+        public enum HunterState { PATROL, CHASE, SEARCH_LAST_KNOWN, SEARCH_AREA, INVESTIGATE_SOUND }
 
         [SerializeField] private CharacterController player;
         [SerializeField] private Transform eyes;
@@ -20,6 +21,13 @@ namespace FacilityEscape.AI.Hunter
         [SerializeField, Min(0f)] private float searchDuration = 5f;
         [SerializeField, Min(0.5f)] private float searchRadius = 2f;
 
+        [Header("Sound stimulus scoring")]
+        [SerializeField, Min(0f)] private float priorityWeight = 1f;
+        [SerializeField, Min(0f)] private float intensityWeight = 2f;
+        [SerializeField, Min(0f)] private float distanceWeight = 1f;
+        [SerializeField, Min(0f)] private float ageWeight = 1f;
+        [SerializeField] private float minimumSoundScore = 0.5f;
+
         private NavMeshAgent agent;
         private HunterPatrol patrol;
         private float patrolSpeed;
@@ -27,6 +35,11 @@ namespace FacilityEscape.AI.Hunter
         private bool normalUpdateRotation;
         private Vector3 interruptedPatrolDestination;
         private Vector3 lastKnownPlayerPosition;
+        private Vector3 soundPosition;
+        private Vector3 soundDestination;
+        private SoundEvent activeSound;
+        private bool hasSoundFocus;
+        private const float SoundRepeatDistance = 1f;
         private float lastSeenTime;
         private float nextVisionCheck;
         private float nextChaseUpdate;
@@ -50,6 +63,11 @@ namespace FacilityEscape.AI.Hunter
             if (body != null && player != null)
                 Physics.IgnoreCollision(body, player, true);
             normalUpdateRotation = agent.updateRotation;
+        }
+
+        private void OnEnable()
+        {
+            SoundEvents.Emitted += OnSoundHeard;
         }
 
         private void Update()
@@ -82,6 +100,9 @@ namespace FacilityEscape.AI.Hunter
                     break;
                 case HunterState.SEARCH_AREA:
                     UpdateAreaSearch();
+                    break;
+                case HunterState.INVESTIGATE_SOUND:
+                    UpdateSoundInvestigation();
                     break;
             }
         }
@@ -148,6 +169,62 @@ namespace FacilityEscape.AI.Hunter
             }
         }
 
+        public float CalculateSoundScore(SoundEvent sound)
+        {
+            if (sound.HearingRadius <= 0f) return float.NegativeInfinity;
+            float normalizedDistance = Mathf.Clamp01(
+                Vector3.Distance(transform.position, sound.Position) / sound.HearingRadius);
+            float age = Mathf.Max(0f, Time.time - sound.EmittedAt);
+            return priorityWeight * sound.Priority + intensityWeight * sound.Intensity
+                - distanceWeight * normalizedDistance - ageWeight * age;
+        }
+
+        private void OnSoundHeard(SoundEvent sound)
+        {
+            float score = CalculateSoundScore(sound);
+            if (agent == null || !agent.isOnNavMesh || player == null || eyes == null ||
+                sound.HearingRadius <= 0f || score < minimumSoundScore ||
+                Vector3.SqrMagnitude(transform.position - sound.Position) >
+                sound.HearingRadius * sound.HearingRadius || CanSeePlayer())
+                return;
+
+            bool followingSound = hasSoundFocus &&
+                (State == HunterState.INVESTIGATE_SOUND || State == HunterState.SEARCH_AREA);
+            if (followingSound)
+            {
+                // Re-score the current stimulus using its age and Hunter's current distance.
+                float currentScore = CalculateSoundScore(activeSound);
+                if (score <= currentScore) return;
+
+                // Fresh nearby shots can refresh the stimulus without restarting its search.
+                if ((sound.Position - soundPosition).sqrMagnitude <=
+                    SoundRepeatDistance * SoundRepeatDistance)
+                {
+                    activeSound = sound;
+                    return;
+                }
+            }
+
+            Vector3 destination;
+            if (!TryReachablePoint(sound.Position, out destination)) return;
+            soundPosition = sound.Position;
+            soundDestination = destination;
+            activeSound = sound;
+            hasSoundFocus = true;
+            Debug.Log($"Hunter sound: position={soundPosition}, score={score:F2}, result=chosen", this);
+            if (State == HunterState.INVESTIGATE_SOUND)
+                agent.SetDestination(soundDestination);
+            else
+                ChangeState(HunterState.INVESTIGATE_SOUND);
+        }
+
+        private void UpdateSoundInvestigation()
+        {
+            if (agent.pathPending) return;
+            if (agent.pathStatus != NavMeshPathStatus.PathComplete || HasArrived())
+                ChangeState(HunterState.SEARCH_AREA);
+        }
+
         private bool HasArrived()
         {
             return !agent.pathPending &&
@@ -166,10 +243,17 @@ namespace FacilityEscape.AI.Hunter
             }
 
             State = next;
+            if (next == HunterState.PATROL || next == HunterState.CHASE ||
+                next == HunterState.SEARCH_LAST_KNOWN)
+                hasSoundFocus = false;
             agent.stoppingDistance = next == HunterState.CHASE
                 ? chaseStoppingDistance : normalStoppingDistance;
             agent.updateRotation = normalUpdateRotation;
             Debug.Log("Hunter state: " + previous + " -> " + next, this);
+            if (next == HunterState.INVESTIGATE_SOUND)
+                Debug.Log("Hunter investigating sound", this);
+            else if (next == HunterState.PATROL)
+                Debug.Log("Hunter resumed patrol", this);
 
             switch (next)
             {
@@ -183,6 +267,11 @@ namespace FacilityEscape.AI.Hunter
                     agent.speed = chaseSpeed;
                     agent.isStopped = false;
                     nextChaseUpdate = Time.time;
+                    break;
+                case HunterState.INVESTIGATE_SOUND:
+                    agent.speed = patrolSpeed;
+                    agent.isStopped = false;
+                    agent.SetDestination(soundDestination);
                     break;
                 case HunterState.SEARCH_LAST_KNOWN:
                     agent.speed = patrolSpeed;
@@ -299,6 +388,7 @@ namespace FacilityEscape.AI.Hunter
 
         private void OnDisable()
         {
+            SoundEvents.Emitted -= OnSoundHeard;
             if (State != HunterState.PATROL && agent != null && agent.enabled &&
                 agent.isOnNavMesh && patrol != null)
                 ChangeState(HunterState.PATROL);

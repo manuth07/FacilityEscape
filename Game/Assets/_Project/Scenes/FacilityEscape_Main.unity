@@ -3536,6 +3536,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 416390, guid: c76d2d3504ddb4847940a815cad04644, type: 3}
   m_PrefabInstance: {fileID: 152225099}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &152648448
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 152648450}
+  - component: {fileID: 152648449}
+  m_Layer: 0
+  m_Name: AI_SoundTestInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &152648449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152648448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de447df702de8dc4fbb184678dbf62ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Common.SoundTestInput
+  soundSource: {fileID: 1202539688}
+  hearingRadius: 10
+--- !u!4 &152648450
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152648448}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &153444882
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11418,6 +11464,11 @@ MonoBehaviour:
   sightLossDelay: 1.25
   searchDuration: 5
   searchRadius: 2
+  priorityWeight: 1
+  intensityWeight: 2
+  distanceWeight: 1
+  ageWeight: 1
+  minimumSoundScore: 0.5
 --- !u!1001 &441570195
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11621,6 +11672,9 @@ MonoBehaviour:
   shotsPerSecond: 4
   flashDuration: 0.06
   damagePerShot: 25
+  gunshotHearingRadius: 15
+  gunshotPriority: 10
+  gunshotIntensity: 2
 --- !u!1001 &462056155
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49423,3 +49477,4 @@ SceneRoots:
   - {fileID: 1825240311}
   - {fileID: 1549768619}
   - {fileID: 440367672}
+  - {fileID: 152648450}

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using FacilityEscape.AI.Common;
 
 namespace FacilityEscape.Combat
 {
@@ -15,6 +16,10 @@ namespace FacilityEscape.Combat
         [SerializeField, Min(0f)] private float flashDuration = 0.06f;
 
         [SerializeField, Min(1)] private int damagePerShot = 25;
+
+        [SerializeField, Min(0f)] private float gunshotHearingRadius = 15f;
+        [SerializeField] private int gunshotPriority = 10;
+        [SerializeField, Min(0f)] private float gunshotIntensity = 2f;
 
         private float nextShotTime;
         private float flashEndTime;
@@ -49,6 +54,8 @@ namespace FacilityEscape.Combat
 
             nextShotTime = Time.time + 1f / shotsPerSecond;
             ShotsFired++;
+            SoundEvents.Emit(playerRoot != null ? playerRoot.position : transform.position,
+                gunshotHearingRadius, gunshotPriority, gunshotIntensity);
             Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
             RaycastHit[] hits = Physics.RaycastAll(ray, range,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
