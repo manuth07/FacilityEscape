@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -7,54 +8,100 @@ namespace FacilityEscape.AI.Hunter
     [RequireComponent(typeof(NavMeshAgent), typeof(HunterPatrol))]
     public sealed class HunterAI : MonoBehaviour
     {
-        public enum HunterState { PATROL, CHASE }
+        public enum HunterState { PATROL, CHASE, SEARCH_LAST_KNOWN, SEARCH_AREA }
+
         [SerializeField] private CharacterController player;
         [SerializeField] private Transform eyes;
         [SerializeField, Min(0f)] private float detectionRadius = 12f;
         [SerializeField, Range(0f, 360f)] private float fieldOfView = 90f;
         [SerializeField, Min(0f)] private float chaseSpeed = 4f;
+        [SerializeField, Min(0.7f)] private float chaseStoppingDistance = 1.1f;
         [SerializeField, Min(0f)] private float sightLossDelay = 1.25f;
+        [SerializeField, Min(0f)] private float searchDuration = 5f;
+        [SerializeField, Min(0.5f)] private float searchRadius = 2f;
 
         private NavMeshAgent agent;
         private HunterPatrol patrol;
         private float patrolSpeed;
+        private float normalStoppingDistance;
+        private bool normalUpdateRotation;
         private Vector3 interruptedPatrolDestination;
+        private Vector3 lastKnownPlayerPosition;
         private float lastSeenTime;
         private float nextVisionCheck;
         private float nextChaseUpdate;
         private bool playerVisible;
+        private float searchEndsAt;
+        private float lookUntil;
+        private float lookYaw;
+        private int searchPointIndex;
+        private readonly List<Vector3> searchPoints = new List<Vector3>();
 
         public HunterState State { get; private set; } = HunterState.PATROL;
+        public Vector3 LastKnownPlayerPosition => lastKnownPlayerPosition;
 
         private void Awake()
         {
             agent = GetComponent<NavMeshAgent>();
             patrol = GetComponent<HunterPatrol>();
             patrolSpeed = agent.speed;
+            normalStoppingDistance = agent.stoppingDistance;
+            CapsuleCollider body = GetComponent<CapsuleCollider>();
+            if (body != null && player != null)
+                Physics.IgnoreCollision(body, player, true);
+            normalUpdateRotation = agent.updateRotation;
         }
 
         private void Update()
         {
             if (!agent.isOnNavMesh || player == null || eyes == null) return;
 
-            // Ten vision checks per second are enough for this first version.
             if (Time.time >= nextVisionCheck)
             {
                 nextVisionCheck = Time.time + 0.1f;
                 playerVisible = CanSeePlayer();
                 if (playerVisible)
                 {
+                    // Never update this memory with an unseen player's position.
+                    lastKnownPlayerPosition = player.transform.position;
                     lastSeenTime = Time.time;
-                    if (State == HunterState.PATROL) BeginChase();
+                    if (State != HunterState.CHASE) ChangeState(HunterState.CHASE);
                 }
             }
 
-            if (State != HunterState.CHASE) return;
+            switch (State)
+            {
+                case HunterState.PATROL:
+                    // The existing HunterPatrol component still owns waypoint movement.
+                    break;
+                case HunterState.CHASE:
+                    UpdateChase();
+                    break;
+                case HunterState.SEARCH_LAST_KNOWN:
+                    UpdateLastKnownSearch();
+                    break;
+                case HunterState.SEARCH_AREA:
+                    UpdateAreaSearch();
+                    break;
+            }
+        }
+
+        private void UpdateChase()
+        {
             if (!playerVisible)
             {
-                // Pause while sight is lost; do not follow a hidden player or search.
                 agent.isStopped = true;
-                if (Time.time - lastSeenTime >= sightLossDelay) ReturnToPatrol();
+                if (Time.time - lastSeenTime >= sightLossDelay)
+                    ChangeState(HunterState.SEARCH_LAST_KNOWN);
+                return;
+            }
+
+            Vector3 separation = Vector3.ProjectOnPlane(
+                player.transform.position - transform.position, Vector3.up);
+            if (separation.sqrMagnitude <= chaseStoppingDistance * chaseStoppingDistance)
+            {
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
                 return;
             }
 
@@ -62,8 +109,162 @@ namespace FacilityEscape.AI.Hunter
             if (Time.time >= nextChaseUpdate)
             {
                 nextChaseUpdate = Time.time + 0.2f;
-                agent.SetDestination(player.transform.position);
+                agent.SetDestination(lastKnownPlayerPosition);
             }
+        }
+
+        private void UpdateLastKnownSearch()
+        {
+            if (agent.pathPending) return;
+            if (agent.pathStatus != NavMeshPathStatus.PathComplete || HasArrived())
+                ChangeState(HunterState.SEARCH_AREA);
+        }
+
+        private void UpdateAreaSearch()
+        {
+            if (Time.time >= searchEndsAt)
+            {
+                ChangeState(HunterState.PATROL);
+                return;
+            }
+
+            if (agent.isStopped)
+            {
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                    Quaternion.Euler(0f, lookYaw, 0f), 120f * Time.deltaTime);
+                if (Time.time >= lookUntil && searchPointIndex < searchPoints.Count)
+                    MoveToNextSearchPoint();
+                return;
+            }
+
+            if (!agent.pathPending &&
+                (agent.pathStatus != NavMeshPathStatus.PathComplete || HasArrived()))
+            {
+                agent.isStopped = true;
+                agent.updateRotation = false;
+                lookYaw = transform.eulerAngles.y + 120f;
+                lookUntil = searchPointIndex < searchPoints.Count
+                    ? Time.time + 0.75f : searchEndsAt;
+            }
+        }
+
+        private bool HasArrived()
+        {
+            return !agent.pathPending &&
+                agent.remainingDistance <= agent.stoppingDistance + 0.1f &&
+                agent.velocity.sqrMagnitude <= 0.04f;
+        }
+
+        private void ChangeState(HunterState next)
+        {
+            if (State == next) return;
+            HunterState previous = State;
+            if (previous == HunterState.PATROL)
+            {
+                interruptedPatrolDestination = agent.destination;
+                patrol.enabled = false;
+            }
+
+            State = next;
+            agent.stoppingDistance = next == HunterState.CHASE
+                ? chaseStoppingDistance : normalStoppingDistance;
+            agent.updateRotation = normalUpdateRotation;
+            Debug.Log("Hunter state: " + previous + " -> " + next, this);
+
+            switch (next)
+            {
+                case HunterState.PATROL:
+                    agent.speed = patrolSpeed;
+                    patrol.enabled = true;
+                    agent.SetDestination(interruptedPatrolDestination);
+                    agent.isStopped = patrol.IsWaiting;
+                    break;
+                case HunterState.CHASE:
+                    agent.speed = chaseSpeed;
+                    agent.isStopped = false;
+                    nextChaseUpdate = Time.time;
+                    break;
+                case HunterState.SEARCH_LAST_KNOWN:
+                    agent.speed = patrolSpeed;
+                    agent.isStopped = false;
+                    Vector3 destination;
+                    if (!TryReachablePoint(lastKnownPlayerPosition, out destination))
+                    {
+                        ChangeState(HunterState.SEARCH_AREA);
+                        break;
+                    }
+                    agent.SetDestination(destination);
+                    break;
+                case HunterState.SEARCH_AREA:
+                    agent.speed = patrolSpeed;
+                    agent.ResetPath();
+                    agent.isStopped = true;
+                    agent.updateRotation = false;
+                    searchEndsAt = Time.time + searchDuration;
+                    lookUntil = Time.time + 0.75f;
+                    lookYaw = transform.eulerAngles.y + 120f;
+                    ChooseSearchPoints();
+                    searchPointIndex = 0;
+                    break;
+            }
+        }
+
+        private bool TryReachablePoint(Vector3 candidate, out Vector3 point)
+        {
+            var filter = new NavMeshQueryFilter
+            {
+                agentTypeID = agent.agentTypeID,
+                areaMask = agent.areaMask
+            };
+            NavMeshHit hit;
+            var path = new NavMeshPath();
+            if (NavMesh.SamplePosition(candidate, out hit, 0.75f, filter) &&
+                NavMesh.CalculatePath(agent.nextPosition, hit.position, filter, path) &&
+                path.status == NavMeshPathStatus.PathComplete)
+            {
+                point = hit.position;
+                return true;
+            }
+            point = default;
+            return false;
+        }
+
+        private void ChooseSearchPoints()
+        {
+            searchPoints.Clear();
+            Vector3 center = agent.nextPosition;
+            // Try six evenly spaced candidates and keep up to three reachable points.
+            for (int i = 0; i < 6 && searchPoints.Count < 3; i++)
+            {
+                Vector3 offset = Quaternion.Euler(0f, i * 60f, 0f) *
+                    Vector3.forward * searchRadius;
+                Vector3 point;
+                if (!TryReachablePoint(center + offset, out point) ||
+                    Vector3.Distance(center, point) < 0.75f || !HasBodyClearance(point))
+                    continue;
+                bool duplicate = searchPoints.Exists(p => Vector3.Distance(p, point) < 0.75f);
+                if (!duplicate) searchPoints.Add(point);
+            }
+        }
+
+        private bool HasBodyClearance(Vector3 point)
+        {
+            // Reject points inside solid props, including colliders added after the bake.
+            float radius = agent.radius;
+            Collider[] overlaps = Physics.OverlapCapsule(
+                point + Vector3.up * (radius + 0.05f),
+                point + Vector3.up * (agent.height - radius),
+                radius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            foreach (Collider obstacle in overlaps)
+                if (!obstacle.transform.IsChildOf(transform)) return false;
+            return true;
+        }
+
+        private void MoveToNextSearchPoint()
+        {
+            agent.updateRotation = normalUpdateRotation;
+            agent.isStopped = false;
+            agent.SetDestination(searchPoints[searchPointIndex++]);
         }
 
         public bool CanSeePlayer()
@@ -96,32 +297,11 @@ namespace FacilityEscape.AI.Hunter
             return nearest != null && nearest.transform.IsChildOf(player.transform);
         }
 
-        private void BeginChase()
-        {
-            interruptedPatrolDestination = agent.destination;
-            patrol.enabled = false;
-            State = HunterState.CHASE;
-            agent.speed = chaseSpeed;
-            agent.isStopped = false;
-            nextChaseUpdate = Time.time;
-            Debug.Log("Hunter state: CHASE", this);
-        }
-
-        private void ReturnToPatrol()
-        {
-            State = HunterState.PATROL;
-            agent.speed = patrolSpeed;
-            patrol.enabled = true;
-            agent.SetDestination(interruptedPatrolDestination);
-            agent.isStopped = patrol.IsWaiting;
-            Debug.Log("Hunter state: PATROL", this);
-        }
-
         private void OnDisable()
         {
-            if (State == HunterState.CHASE && agent != null && agent.enabled &&
+            if (State != HunterState.PATROL && agent != null && agent.enabled &&
                 agent.isOnNavMesh && patrol != null)
-                ReturnToPatrol();
+                ChangeState(HunterState.PATROL);
         }
     }
 }

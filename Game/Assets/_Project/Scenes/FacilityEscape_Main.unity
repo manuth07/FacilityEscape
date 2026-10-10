@@ -11414,7 +11414,10 @@ MonoBehaviour:
   detectionRadius: 12
   fieldOfView: 90
   chaseSpeed: 4
+  chaseStoppingDistance: 1.1
   sightLossDelay: 1.25
+  searchDuration: 5
+  searchRadius: 2
 --- !u!1001 &441570195
 PrefabInstance:
   m_ObjectHideFlags: 0
