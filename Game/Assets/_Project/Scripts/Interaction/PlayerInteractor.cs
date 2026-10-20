@@ -1,9 +1,9 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInteractor : MonoBehaviour
 {
     [SerializeField] private float interactRange = 3f;
-    [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private LayerMask interactMask = ~0;
 
     private IInteractable current;
@@ -18,7 +18,8 @@ public class PlayerInteractor : MonoBehaviour
             current = hit.collider.GetComponentInParent<IInteractable>();
         }
 
-        if (current != null && Input.GetKeyDown(interactKey))
+        Keyboard keyboard = Keyboard.current;
+        if (current != null && keyboard != null && keyboard.eKey.wasPressedThisFrame)
             current.Interact();
     }
 
