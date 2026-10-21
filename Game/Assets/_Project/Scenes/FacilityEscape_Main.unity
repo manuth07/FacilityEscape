@@ -1690,10 +1690,17 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9200964578072106634, guid: f88ea255b87676c49beb31f81c168bac, type: 3}
+      propertyPath: startsLocked
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8762086196291244228, guid: f88ea255b87676c49beb31f81c168bac, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 635412107}
   m_SourcePrefab: {fileID: 100100000, guid: f88ea255b87676c49beb31f81c168bac, type: 3}
 --- !u!4 &58801494 stripped
 Transform:
@@ -15254,6 +15261,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 416390, guid: c76d2d3504ddb4847940a815cad04644, type: 3}
   m_PrefabInstance: {fileID: 634954918}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &635412105 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8762086196291244228, guid: f88ea255b87676c49beb31f81c168bac, type: 3}
+  m_PrefabInstance: {fileID: 58801493}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &635412106 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9200964578072106634, guid: f88ea255b87676c49beb31f81c168bac, type: 3}
+  m_PrefabInstance: {fileID: 58801493}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635412105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21cc770a3b03f4947aa17a77e19f95d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Door
+--- !u!114 &635412107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635412105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a0734c03f3a30541a901b9aa4bf5380, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExitDoorUnlocker
+  powerCellManager: {fileID: 529714578}
+  door: {fileID: 635412106}
+  requiredCells: 3
 --- !u!1001 &637350901
 PrefabInstance:
   m_ObjectHideFlags: 0
