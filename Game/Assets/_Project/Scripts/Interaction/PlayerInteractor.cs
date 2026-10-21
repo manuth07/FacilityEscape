@@ -19,8 +19,12 @@ public class PlayerInteractor : MonoBehaviour
         }
 
         Keyboard keyboard = Keyboard.current;
-        if (current != null && keyboard != null && keyboard.eKey.wasPressedThisFrame)
+        if (current != null && keyboard != null
+            && Cursor.lockState == CursorLockMode.Locked
+            && keyboard.eKey.wasPressedThisFrame)
+        {
             current.Interact();
+        }
     }
 
     private void OnGUI()
