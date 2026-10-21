@@ -17,8 +17,12 @@ public class PlayerThrower : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        if (keyboard.gKey.wasPressedThisFrame && devices > 0 && Time.time >= nextThrowTime)
+        if (Cursor.lockState == CursorLockMode.Locked
+            && keyboard.gKey.wasPressedThisFrame
+            && devices > 0 && Time.time >= nextThrowTime)
+        {
             Throw();
+        }
     }
 
     private void Throw()
