@@ -40454,6 +40454,8 @@ GameObject:
   - component: {fileID: 1692277117}
   - component: {fileID: 1692277116}
   - component: {fileID: 1692277115}
+  - component: {fileID: 1692277120}
+  - component: {fileID: 1692277121}
   m_Layer: 0
   m_Name: Flanker
   m_TagString: Untagged
@@ -40505,6 +40507,8 @@ MonoBehaviour:
   playerViewHalfAngle: 60
   exposureRange: 25
   exposureSampleSpacing: 2.5
+  cautiousDuration: 6
+  cautiousExposureMultiplier: 2
   drawGizmos: 1
   showOverlay: 1
   logDecisions: 1
@@ -40596,6 +40600,31 @@ Transform:
   - {fileID: 971886771}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1692277120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692277114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b6f96eba30fbf148b39887a238ae89b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Combat.Health
+  maxHealth: 100
+--- !u!114 &1692277121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692277114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3e8b4f84fc0f3b40af9f0dd6238f8e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FlankerDamageReaction
 --- !u!1 &1705620059
 GameObject:
   m_ObjectHideFlags: 0

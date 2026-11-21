@@ -50,6 +50,12 @@ namespace FacilityEscape.AI.Flanker
         [SerializeField, Range(10f, 90f)] private float playerViewHalfAngle = 60f;
         [SerializeField, Min(1f)] private float exposureRange = 25f;
         [SerializeField, Min(0.5f)] private float exposureSampleSpacing = 2.5f;
+        [Header("Reaction to damage")]
+        [SerializeField, Min(0f)] private float cautiousDuration = 6f;
+        [SerializeField, Min(1f)] private float cautiousExposureMultiplier = 2f;
+
+        private float cautiousUntil = -999f;
+        private readonly FlankWeights activeWeights = new FlankWeights();
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
@@ -93,6 +99,7 @@ namespace FacilityEscape.AI.Flanker
 
         private void OnEnable()
         {
+            isEvaluating = false;
             SoundEvents.Emitted += OnSoundHeard;
         }
 
@@ -181,6 +188,40 @@ namespace FacilityEscape.AI.Flanker
 
         // ---------------------------------------------------------------- states
 
+        /// <summary>
+        /// Called when the Flanker takes damage. It switches to a different side and, for a while,
+        /// weights exposure more heavily so it stays out of the player's line of fire.
+        /// </summary>
+        public void NotifyDamaged()
+        {
+            lastStimulusTime = Time.time;
+            lastReason = "took damage";
+            cautiousUntil = Time.time + cautiousDuration;
+
+            if (logDecisions)
+                Debug.Log("Flanker hit: switching side and favouring cover", this);
+
+            if (State == FlankerState.FLANK)
+            {
+                flankReference = transform.position;
+                hasTarget = false;
+                nextEvaluationTime = 0f;
+            }
+            else
+            {
+                BeginFlank();
+            }
+        }
+
+        private void RefreshActiveWeights()
+        {
+            bool cautious = Time.time < cautiousUntil;
+            activeWeights.route = weights.route;
+            activeWeights.visibility = weights.visibility;
+            activeWeights.exposure = weights.exposure * (cautious ? cautiousExposureMultiplier : 1f);
+            activeWeights.flank = weights.flank;
+            activeWeights.maxRouteLength = weights.maxRouteLength;
+        }
         private void BeginFlank()
         {
             flankReference = transform.position;
@@ -272,6 +313,7 @@ namespace FacilityEscape.AI.Flanker
         {
             isEvaluating = true;
             working.Clear();
+            RefreshActiveWeights();
 
             Vector3 center = player.transform.position;
             Vector3 eyes = PlayerEyePosition;
@@ -328,7 +370,7 @@ namespace FacilityEscape.AI.Flanker
                 IsCurrentTarget = isCurrent
             };
 
-            working.Add(FlankScoring.Score(c, weights));
+            working.Add(FlankScoring.Score(c, activeWeights));
         }
 
         private static float PathLength(Vector3[] corners, int count)
