@@ -56,3 +56,15 @@ Game/Assets/\_Project/Scripts/AI/Flanker/ (FlankWeights, FlankCandidate, FlankSc
 
 \- Re-evaluation runs once per second, not every frame.
 
+
+
+\## Reaction to the player's weapon
+
+\- The Flanker reacts to gunfire (SoundEvents priority >= 5) but ignores the noise device (priority 1).
+
+\- When it takes damage (Health.CurrentHealth drops), FlankerDamageReaction calls FlankerAI.NotifyDamaged().
+
+\- It then re-plans immediately on a different side and, for 6 s, doubles the exposure weight so it favours routes outside the player's view and line of fire.
+
+\- Health is read by comparing CurrentHealth each frame, because Health has no damage event.
+
