@@ -7,7 +7,8 @@ namespace FacilityEscape.Feedback
     {
         PulseShot, EnemyShot, HitTick, PlayerHurt,
         DoorOpen, DoorClose, DoorDenied,
-        DeviceBeep, DeviceLand, Death, Alert
+        DeviceBeep, DeviceLand, Death, Alert,
+        PowerCellPickup, CrateScrape, CrateImpact
     }
 
     /// <summary>
@@ -21,18 +22,30 @@ namespace FacilityEscape.Feedback
         private static readonly Dictionary<SfxId, AudioClip> clips = new Dictionary<SfxId, AudioClip>();
         private static AudioListener listener;
 
+        private static SfxBank bank;
+
+        public static void SetBank(SfxBank value) { bank = value; }
+        public static void ClearBank(SfxBank value) { if (bank == value) bank = null; }
+
+        /// <summary>The clip for a sound: a Pixabay clip from the bank if set, otherwise the generated one.</summary>
+        public static AudioClip GetClip(SfxId id) => Get(id);
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             clips.Clear();
             listener = null;
+            bank = null;
         }
 
         /// <summary>Plays a sound at a world position (volume falls off with distance).</summary>
         public static void Play(SfxId id, Vector3 position, float volume = 1f)
         {
             AudioClip clip = Get(id);
-            if (clip != null) AudioSource.PlayClipAtPoint(clip, position, volume);
+            if (clip == null) return;
+
+            float scale = bank != null ? bank.MasterVolume : 1f;
+            AudioSource.PlayClipAtPoint(clip, position, Mathf.Clamp01(volume * scale));
         }
 
         /// <summary>Plays a sound at the listener, so it is always heard at full volume.</summary>
@@ -47,6 +60,8 @@ namespace FacilityEscape.Feedback
 
         private static AudioClip Get(SfxId id)
         {
+            if (bank != null && bank.TryGetClip(id, out AudioClip custom)) return custom;
+
             if (clips.TryGetValue(id, out AudioClip cached) && cached != null) return cached;
 
             AudioClip made = Create(id);
@@ -142,7 +157,30 @@ namespace FacilityEscape.Feedback
                 case SfxId.Alert:
                     return Build("Alert", 0.2f, (t, p) =>
                         Mathf.Sin(TwoPi * (p < 0.5f ? 600f : 900f) * t) * (1f - p) * 0.35f);
+                case SfxId.PowerCellPickup:
+                    return Build("PowerCellPickup", 0.55f, (t, p) =>
+                    {
+                        float v = Mathf.Sin(TwoPi * 660f * t) * Mathf.Exp(-t * 10f);
+                        if (t > 0.1f) v += Mathf.Sin(TwoPi * 880f * t) * Mathf.Exp(-(t - 0.1f) * 10f);
+                        if (t > 0.2f) v += Mathf.Sin(TwoPi * 1320f * t) * Mathf.Exp(-(t - 0.2f) * 8f);
+                        return v * 0.3f;
+                    });
 
+                case SfxId.CrateScrape:
+                    {
+                        float lp = 0f;
+                        return Build("CrateScrape", 1.2f, (t, p) =>
+                        {
+                            lp += 0.12f * (Noise() - lp);
+                            float grind = 0.6f + 0.4f * Mathf.Sin(TwoPi * 5f * t);
+                            return lp * grind * 2.2f;
+                        });
+                    }
+
+                case SfxId.CrateImpact:
+                    return Build("CrateImpact", 0.2f, (t, p) =>
+                        Mathf.Sin(TwoPi * 95f * t) * Mathf.Exp(-p * 14f) * 0.8f
+                        + Noise() * Mathf.Exp(-p * 35f) * 0.25f);
                 default:
                     return null;
             }
