@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using FacilityEscape.Feedback;
 
 public class Door : MonoBehaviour, IInteractable
 {
@@ -28,9 +29,15 @@ public class Door : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        if (isLocked) return;
+        if (isLocked)
+        {
+            Sfx.Play(SfxId.DoorDenied, transform.position);
+            return;
+        }
+
         isOpen = !isOpen;
         if (obstacle != null) obstacle.enabled = !isOpen;
+        Sfx.Play(isOpen ? SfxId.DoorOpen : SfxId.DoorClose, transform.position);
     }
 
     public void Unlock() => isLocked = false;

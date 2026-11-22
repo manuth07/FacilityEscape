@@ -8748,7 +8748,6 @@ GameObject:
   m_Component:
   - component: {fileID: 330585546}
   - component: {fileID: 330585545}
-  - component: {fileID: 330585544}
   - component: {fileID: 330585547}
   m_Layer: 0
   m_Name: Main Camera
@@ -8757,14 +8756,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &330585544
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 330585543}
-  m_Enabled: 1
 --- !u!20 &330585545
 Camera:
   m_ObjectHideFlags: 0
@@ -15062,6 +15053,72 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 409034, guid: a4c18952442944083b1fddc06ba477c2, type: 3}
   m_PrefabInstance: {fileID: 629220972}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &630585704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 630585706}
+  - component: {fileID: 630585705}
+  - component: {fileID: 630585707}
+  m_Layer: 0
+  m_Name: GameHud
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &630585705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630585704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e7ed5c551fc98a46a77cf4f4c47225e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Feedback.GameHud
+  playerHealth: {fileID: 0}
+  thrower: {fileID: 0}
+  powerCells: {fileID: 0}
+  healthyColor: {r: 0.2, g: 0.9, b: 0.45, a: 1}
+  warningColor: {r: 1, g: 0.8, b: 0.2, a: 1}
+  dangerColor: {r: 1, g: 0.25, b: 0.25, a: 1}
+  enemyColor: {r: 1, g: 0.35, b: 0.3, a: 1}
+  targetVisibleSeconds: 2
+--- !u!4 &630585706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630585704}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -15.82441, y: 6.75002, z: 2.19263}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &630585707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630585704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ed297eb9d7d0f4409a9ec1efa7a8671, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Feedback.PowerCellFeedback
+  manager: {fileID: 0}
 --- !u!1 &634141355
 GameObject:
   m_ObjectHideFlags: 0
@@ -17732,6 +17789,65 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 409034, guid: a4c18952442944083b1fddc06ba477c2, type: 3}
   m_PrefabInstance: {fileID: 716782557}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &717716744
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 717716746}
+  - component: {fileID: 717716745}
+  m_Layer: 0
+  m_Name: Audio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &717716745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 717716744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9cc37e01bb5d9f4f96f6b5a876f8e8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Feedback.SfxBank
+  masterVolume: 1
+  pulseShot: {fileID: 8300000, guid: 29563882aa10deb4c8ba49a8d9ecb4de, type: 3}
+  enemyShot: {fileID: 8300000, guid: 3827bc0ba8fd23a4d92baab6f03eaf8b, type: 3}
+  hitTick: {fileID: 8300000, guid: 44537fecd97ea5a4db02d056d5595481, type: 3}
+  playerHurt: {fileID: 0}
+  death: {fileID: 8300000, guid: ff9dd0b007dc4e140ad4638c59125b53, type: 3}
+  alert: {fileID: 8300000, guid: 49b844648d81aff478d0b701faf72111, type: 3}
+  doorOpen: {fileID: 8300000, guid: 2b05fbcb26c8b764aa233bc5b2bd90a3, type: 3}
+  doorClose: {fileID: 8300000, guid: 2b05fbcb26c8b764aa233bc5b2bd90a3, type: 3}
+  doorDenied: {fileID: 8300000, guid: 49b844648d81aff478d0b701faf72111, type: 3}
+  deviceLand: {fileID: 8300000, guid: 15293c21602aa3f48870995b509784fc, type: 3}
+  deviceBeep: {fileID: 8300000, guid: bf520ac74d5f1b342995537c6b7db2f5, type: 3}
+  powerCellPickup: {fileID: 8300000, guid: 1e53f8515edb4424f80cbc6b42bbff4c, type: 3}
+  crateScrape: {fileID: 8300000, guid: c247cf41ce0204d4cb6281ae3ea11d19, type: 3}
+  crateImpact: {fileID: 8300000, guid: d9317be62953350449af63f5f6c5121c, type: 3}
+--- !u!4 &717716746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 717716744}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -6.2, y: 2.64466, z: 0.85907}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &722564947
 GameObject:
   m_ObjectHideFlags: 0
@@ -29196,6 +29312,7 @@ GameObject:
   - component: {fileID: 1202539687}
   - component: {fileID: 1202539686}
   - component: {fileID: 1202539689}
+  - component: {fileID: 1202539690}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -29273,7 +29390,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5ce525b58bd4e14fb6d9bb6ddafd5c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CratePusher
-  pushForce: 158
+  pushForce: 200
+--- !u!114 &1202539690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202539685}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b6f96eba30fbf148b39887a238ae89b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Combat.Health
+  maxHealth: 100
 --- !u!1001 &1203595937
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39306,6 +39436,8 @@ GameObject:
   - component: {fileID: 1655946766}
   - component: {fileID: 1655946765}
   - component: {fileID: 1655946764}
+  - component: {fileID: 1655946768}
+  - component: {fileID: 1655946767}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -39456,6 +39588,34 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &1655946767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655946761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f21ee2158c738b64894b12257516dfe8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Feedback.PulseGunFeedback
+  gun: {fileID: 459001405}
+  playerCamera: {fileID: 1655946763}
+  hud: {fileID: 630585705}
+  range: 50
+  muzzleOffset: {x: 0.25, y: -0.2, z: 0.6}
+  tracerColor: {r: 0.4, g: 1, b: 1, a: 1}
+  tracerWidth: 0.025
+  tracerSeconds: 0.06
+--- !u!81 &1655946768
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655946761}
+  m_Enabled: 1
 --- !u!1001 &1657750184
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -40457,6 +40617,7 @@ GameObject:
   - component: {fileID: 1692277120}
   - component: {fileID: 1692277121}
   - component: {fileID: 1692277122}
+  - component: {fileID: 1692277123}
   m_Layer: 0
   m_Name: Flanker
   m_TagString: Untagged
@@ -40653,7 +40814,24 @@ MonoBehaviour:
   shotPriority: 4
   tracerSeconds: 0.08
   logShots: 1
-  showPlayerHealth: 1
+  showPlayerHealth: 0
+--- !u!114 &1692277123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692277114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1734b7baa24565b4ea33557684def639, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Feedback.FloatingHealthBar
+  height: 2.4
+  width: 1.2
+  visibleSeconds: 3
+  alwaysVisible: 0
+  fillColor: {r: 1, g: 0.35, b: 0.3, a: 1}
 --- !u!1 &1705620059
 GameObject:
   m_ObjectHideFlags: 0
@@ -50537,3 +50715,5 @@ SceneRoots:
   - {fileID: 152648450}
   - {fileID: 726507005}
   - {fileID: 1692277119}
+  - {fileID: 630585706}
+  - {fileID: 717716746}

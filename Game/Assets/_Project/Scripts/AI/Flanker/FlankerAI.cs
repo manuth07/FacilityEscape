@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using FacilityEscape.AI.Common;
+using FacilityEscape.Feedback;
 
 namespace FacilityEscape.AI.Flanker
 {
@@ -185,7 +186,10 @@ namespace FacilityEscape.AI.Flanker
             lastStimulusTime = Time.time;
             lastReason = reason;
             if (State == FlankerState.IDLE || State == FlankerState.RETURN)
+            {
+                Sfx.Play(SfxId.Alert, transform.position, 0.8f);
                 BeginFlank();
+            }
         }
 
         // ---------------------------------------------------------------- states

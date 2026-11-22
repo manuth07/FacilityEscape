@@ -1,6 +1,7 @@
 using UnityEngine;
 using FacilityEscape.AI.Common;
 using FacilityEscape.Combat;
+using FacilityEscape.Feedback;
 
 namespace FacilityEscape.AI.Flanker
 {
@@ -128,6 +129,7 @@ namespace FacilityEscape.AI.Flanker
             flashUntil = Time.time + tracerSeconds;
 
             SoundEvents.Emit(muzzle, shotHearingRadius, shotPriority, 1f);
+            Sfx.Play(SfxId.EnemyShot, muzzle);
 
             if (logShots)
             {
