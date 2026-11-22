@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using FacilityEscape.AI.Common;
+using FacilityEscape.Feedback;
 
 [RequireComponent(typeof(Rigidbody))]
 public class NoiseDevice : MonoBehaviour
@@ -18,6 +19,7 @@ public class NoiseDevice : MonoBehaviour
     {
         if (landed) return;
         landed = true;
+        Sfx.Play(SfxId.DeviceLand, transform.position, 0.8f);
         StartCoroutine(BeepRoutine());
     }
 
@@ -26,6 +28,7 @@ public class NoiseDevice : MonoBehaviour
         for (int i = 0; i < beepCount; i++)
         {
             SoundEvents.Emit(transform.position, noiseRadius, noisePriority, noiseIntensity);
+            Sfx.Play(SfxId.DeviceBeep, transform.position);
             yield return new WaitForSeconds(beepInterval);
         }
         Destroy(gameObject, Mathf.Max(0f, lifetimeAfterLanding - beepCount * beepInterval));

@@ -37,8 +37,5 @@ public class PlayerThrower : MonoBehaviour
         rb.AddForce(transform.forward * throwForce + Vector3.up * 3f, ForceMode.Impulse);
     }
 
-    private void OnGUI()
-    {
-        GUI.Label(new Rect(20, Screen.height - 40, 250, 30), "Noise devices (G): " + devices);
-    }
+    
 }
