@@ -83,6 +83,7 @@ namespace FacilityEscape.AI.Flanker
 
         public FlankerState State { get; private set; } = FlankerState.IDLE;
         public event Action<FlankerAI> Engaged;
+        public CharacterController Player => player;
 
         private Vector3 PlayerEyePosition =>
             playerEyes != null ? playerEyes.position : player.transform.position + Vector3.up * 1.6f;
@@ -144,6 +145,7 @@ namespace FacilityEscape.AI.Flanker
             if ((State == FlankerState.FLANK || State == FlankerState.ENGAGE) &&
                 Time.time - lastStimulusTime > alertDuration)
             {
+                lastReason = "alert expired";
                 ChangeState(FlankerState.RETURN);
             }
 
@@ -219,7 +221,7 @@ namespace FacilityEscape.AI.Flanker
             activeWeights.route = weights.route;
             activeWeights.visibility = weights.visibility;
             activeWeights.exposure = weights.exposure * (cautious ? cautiousExposureMultiplier : 1f);
-            activeWeights.flank = weights.flank;
+            activeWeights.flank = weights.flank * (cautious ? 2f : 1f);
             activeWeights.maxRouteLength = weights.maxRouteLength;
         }
         private void BeginFlank()
@@ -269,6 +271,7 @@ namespace FacilityEscape.AI.Flanker
 
                 if (arrived && !pathBroken)
                 {
+                    lastReason = "arrived at flank position";
                     ChangeState(FlankerState.ENGAGE);
                     return;
                 }
@@ -297,7 +300,11 @@ namespace FacilityEscape.AI.Flanker
             }
 
             // After holding, flank again, preferring a different side from where we are now.
-            if (Time.time >= engageEndsAt) BeginFlank();
+            if (Time.time >= engageEndsAt)
+            {
+                lastReason = "engage hold finished, switching side";
+                BeginFlank();
+            }
         }
 
         private void UpdateReturn()

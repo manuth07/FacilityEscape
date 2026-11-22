@@ -40456,6 +40456,7 @@ GameObject:
   - component: {fileID: 1692277115}
   - component: {fileID: 1692277120}
   - component: {fileID: 1692277121}
+  - component: {fileID: 1692277122}
   m_Layer: 0
   m_Name: Flanker
   m_TagString: Untagged
@@ -40625,6 +40626,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3e8b4f84fc0f3b40af9f0dd6238f8e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlankerDamageReaction
+--- !u!114 &1692277122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692277114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d2e59e62a353c94e96b7b06f698b021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Flanker.FlankerAttack
+  damage: 10
+  cooldown: 1.5
+  windUp: 0.6
+  maxRange: 14
+  closeAccuracy: 0.85
+  farAccuracy: 0.35
+  missSpread: 1.2
+  muzzleHeight: 1.4
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  shotHearingRadius: 12
+  shotPriority: 4
+  tracerSeconds: 0.08
+  logShots: 1
+  showPlayerHealth: 1
 --- !u!1 &1705620059
 GameObject:
   m_ObjectHideFlags: 0
