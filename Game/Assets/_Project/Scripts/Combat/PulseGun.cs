@@ -55,7 +55,7 @@ namespace FacilityEscape.Combat
             nextShotTime = Time.time + 1f / shotsPerSecond;
             ShotsFired++;
             SoundEvents.Emit(playerRoot != null ? playerRoot.position : transform.position,
-                gunshotHearingRadius, gunshotPriority, gunshotIntensity);
+                gunshotHearingRadius, gunshotPriority, gunshotIntensity, isGunfire: true);
             Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
             RaycastHit[] hits = Physics.RaycastAll(ray, range,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
