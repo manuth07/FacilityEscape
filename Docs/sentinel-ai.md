@@ -14,11 +14,11 @@ The yellow cell model marks the objective for this test. Capture the Game view a
 
 ## Add it to the factory
 
-1. Coordinate the shared scene edit with the teammate working on it.
-2. Drag `Assets/_Project/Prefabs/Sentinel.prefab` into the factory scene. Place it on the baked NavMesh near the defended cell.
-3. Assign the player's **CharacterController**, a **Guard Point** facing the entrance, and at least two floor-level **Cover Points**. The player and the Sentinel use the team's existing **Health** component.
-4. Position each marker behind a solid collider and check that routes to the markers stay inside the guard radius. Test approaches from different angles. The Sentinel checks current collision geometry for sight and the NavMesh for navigation, so include the team's runtime NavMesh obstacles if movable crates must block its routes.
-5. Repeat the recording sequence in the factory. Commit the generated Unity assets and their Unity-generated `.meta` files with the coordinated scene edit.
+1. Open `Assets/_Project/Scenes/FacilityEscape_Main.unity` in Unity Editor **6000.6.2f1**.
+2. Choose **Facility Escape → Place Sentinel in Factory**. The tool finds Power Cell C and the existing player, uses the factory's baked robot NavMesh, and checks for at least two reachable cover points. If the prefab is missing, Unity generates it.
+3. Check the Console for the placement message, then save the scene. The Hierarchy shows **Sentinel guard station** with the prefab, guard point and cover markers.
+4. Enter Play mode and approach Power Cell C from the main factory. Shoot the Sentinel once. Try the northern or southern lane to expose its cover. Watch **Active Branch** and confirm it can navigate to the alternative marker without leaving the security area.
+5. Record the tested sequence with the Game view and Inspector visible. Commit the saved factory scene, generated prefab and materials, and their Unity-generated `.meta` files after the factory test.
 
 ## Implementation
 
