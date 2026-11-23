@@ -19,11 +19,10 @@ namespace FacilityEscape.EditorTools
         [MenuItem("Facility Escape/Create Sentinel Test")]
         public static void Create()
         {
-            if (AssetDatabase.LoadMainAssetAtPath(ScenePath) != null ||
-                AssetDatabase.LoadMainAssetAtPath(PrefabPath) != null)
+            if (AssetDatabase.LoadMainAssetAtPath(ScenePath) != null)
             {
                 EditorUtility.DisplayDialog("Sentinel Test",
-                    "The demo scene or Sentinel prefab already exists. Open the existing scene to play.",
+                    "The demo scene already exists. Open the existing scene to play.",
                     "OK");
                 return;
             }
@@ -95,7 +94,7 @@ namespace FacilityEscape.EditorTools
             hud.FindProperty("playerHealth").objectReferenceValue = player.GetComponent<Health>();
             hud.ApplyModifiedPropertiesWithoutUndo();
 
-            GameObject prefab = CreatePrefab(steel, orange, glow);
+            GameObject prefab = GetOrCreatePrefab();
             var sentinel = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             Transform guard = Marker("Guard point", null, Vector3.zero);
             guard.rotation = Quaternion.Euler(0, 180, 0);
@@ -120,6 +119,20 @@ namespace FacilityEscape.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Selection.activeGameObject = sentinel;
+        }
+
+        internal static GameObject GetOrCreatePrefab()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (prefab != null) return prefab;
+
+            if (!AssetDatabase.IsValidFolder(MaterialFolder))
+                AssetDatabase.CreateFolder("Assets/_Project/Materials", "SentinelDemo");
+
+            return CreatePrefab(
+                MakeMaterial("Steel", new Color(0.14f, 0.25f, 0.34f)),
+                MakeMaterial("Orange", new Color(1f, 0.46f, 0.1f)),
+                MakeMaterial("Glow", new Color(1f, 0.91f, 0.34f)));
         }
 
         private static GameObject CreatePrefab(Material steel, Material orange, Material glow)
