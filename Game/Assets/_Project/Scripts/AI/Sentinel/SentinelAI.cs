@@ -76,6 +76,7 @@ namespace FacilityEscape.AI.Sentinel
         {
             if (!agent.isOnNavMesh)
             {
+                CancelAim();
                 activeBranch = "Waiting for NavMesh";
                 return;
             }
@@ -133,6 +134,7 @@ namespace FacilityEscape.AI.Sentinel
             if (occupiedCover != null)
             {
                 if (!relocate || IsProtected(transform.position)) return Status.Failure;
+                if (!visible && IsProtected(occupiedCover.position)) return Status.Failure;
             }
             else if (relocate || Time.time >= hitUntil || relocating)
                 return Status.Failure;
@@ -193,10 +195,13 @@ namespace FacilityEscape.AI.Sentinel
                     candidatePath.status != NavMeshPathStatus.PathComplete)
                     continue;
 
+                Vector3[] corners = candidatePath.corners;
+                if (corners.Length == 0) continue;
+
                 float length = 0f;
                 Vector3 previous = transform.position;
                 bool withinGuardArea = true;
-                foreach (Vector3 corner in candidatePath.corners)
+                foreach (Vector3 corner in corners)
                 {
                     withinGuardArea &= (corner - GuardPosition).sqrMagnitude <= guardRadius * guardRadius;
                     length += Vector3.Distance(previous, corner);
@@ -295,7 +300,8 @@ namespace FacilityEscape.AI.Sentinel
         private bool Drive(Vector3 destination)
         {
             if (requestedDestination == destination && (agent.pathPending ||
-                agent.pathStatus == NavMeshPathStatus.PathComplete))
+                (agent.hasPath && agent.pathStatus == NavMeshPathStatus.PathComplete) ||
+                Arrived(destination)))
                 return true;
             if (!agent.SetDestination(destination)) return false;
             agent.isStopped = false;
@@ -305,8 +311,14 @@ namespace FacilityEscape.AI.Sentinel
 
         private bool Arrived(Vector3 destination)
         {
-            Vector3 offset = Vector3.ProjectOnPlane(destination - transform.position, Vector3.up);
-            return offset.magnitude <= agent.stoppingDistance + 0.05f && !agent.pathPending;
+            if (agent.pathPending) return false;
+
+            float tolerance = agent.stoppingDistance + 0.05f;
+            if (agent.hasPath && requestedDestination == destination)
+                return agent.pathStatus == NavMeshPathStatus.PathComplete &&
+                    agent.remainingDistance <= tolerance;
+
+            return (destination - transform.position).sqrMagnitude <= tolerance * tolerance;
         }
 
         private void Stop()
