@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using FacilityEscape.AI.Common;
 using FacilityEscape.Feedback;
+using UnityEngine.InputSystem;
 
 namespace FacilityEscape.AI.Flanker
 {
@@ -60,7 +61,7 @@ namespace FacilityEscape.AI.Flanker
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
-        [SerializeField] private bool showOverlay = true;
+        [SerializeField] private bool showOverlay = false;
         [SerializeField] private bool logDecisions = true;
 
         private NavMeshAgent agent;
@@ -135,6 +136,13 @@ namespace FacilityEscape.AI.Flanker
 
         private void Update()
         {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.tabKey.wasPressedThisFrame)
+            {
+                showOverlay = !showOverlay; // Tab toggles the debug overlay
+                Debug.Log("Flanker overlay: " + (showOverlay ? "on" : "off"), this);
+            }
+
             if (player == null || !agent.isOnNavMesh) return;
 
             if (Time.time >= nextSenseTime)
