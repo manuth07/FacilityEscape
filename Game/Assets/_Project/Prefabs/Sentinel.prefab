@@ -204,6 +204,7 @@ MonoBehaviour:
   visualBody: {fileID: 2971319324887971942}
   muzzleFlash: {fileID: 781241942862572143}
   turnSpeed: 540
+  shotClip: {fileID: 8300000, guid: 29563882aa10deb4c8ba49a8d9ecb4de, type: 3}
 --- !u!114 &237560496698883663
 MonoBehaviour:
   m_ObjectHideFlags: 0

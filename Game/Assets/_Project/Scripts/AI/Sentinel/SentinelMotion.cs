@@ -16,6 +16,7 @@ namespace FacilityEscape.AI.Sentinel
         [SerializeField, Min(1)] private float turnSpeed = 540f;
 
         [Header("Pulse audio")]
+        [SerializeField] private AudioClip shotClip;
         [SerializeField, Range(0f, 1f)] private float shotVolume = 0.85f;
 
         private NavMeshAgent agent;
@@ -61,8 +62,12 @@ namespace FacilityEscape.AI.Sentinel
         {
             shotTime = Time.time;
             if (muzzleFlash != null) muzzleFlash.SetActive(true);
-            AudioClip clip = Sfx.GetClip(SfxId.EnemyShot);
-            if (clip != null) shotSource.PlayOneShot(clip, shotVolume);
+            AudioClip clip = shotClip != null ? shotClip : Sfx.GetClip(SfxId.EnemyShot);
+            if (clip != null)
+            {
+                shotSource.pitch = Random.Range(0.96f, 1.04f);
+                shotSource.PlayOneShot(clip, shotVolume);
+            }
         }
 
         private void LateUpdate()
