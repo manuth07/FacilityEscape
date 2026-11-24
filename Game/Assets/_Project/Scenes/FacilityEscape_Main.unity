@@ -6242,6 +6242,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 223228779}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &227877855
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 227877856}
+  m_Layer: 0
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &227877856
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 227877855}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.4, z: 0.35}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 440367672}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &227911445
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11783,6 +11814,8 @@ GameObject:
   - component: {fileID: 440367670}
   - component: {fileID: 440367669}
   - component: {fileID: 440367673}
+  - component: {fileID: 440367675}
+  - component: {fileID: 440367674}
   m_Layer: 0
   m_Name: Hunter
   m_TagString: Untagged
@@ -11871,6 +11904,7 @@ Transform:
   - {fileID: 487615062}
   - {fileID: 1789088565}
   - {fileID: 595573970}
+  - {fileID: 227877856}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &440367673
@@ -11894,11 +11928,51 @@ MonoBehaviour:
   sightLossDelay: 1.25
   searchDuration: 5
   searchRadius: 2
+  combat: {fileID: 440367674}
   priorityWeight: 1
   intensityWeight: 2
   distanceWeight: 1
   ageWeight: 1
   minimumSoundScore: 0.5
+--- !u!114 &440367674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 440367668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 017fc3c524a519d41949efab83a0d12a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Hunter.HunterAttack
+  player: {fileID: 1202539687}
+  playerHealth: {fileID: 1202539690}
+  muzzle: {fileID: 227877856}
+  pulseMaterial: {fileID: 2100000, guid: aa44cb13f08a85942900f4f6fd61074b, type: 2}
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  attackRange: 8
+  preferredDistance: 5.5
+  damage: 15
+  cooldown: 1.2
+  windUp: 0.35
+  facingTolerance: 10
+  pulseSeconds: 0.08
+--- !u!114 &440367675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 440367668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b6f96eba30fbf148b39887a238ae89b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Combat.Health
+  maxHealth: 100
 --- !u!1001 &441570195
 PrefabInstance:
   m_ObjectHideFlags: 0

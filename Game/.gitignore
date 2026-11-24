@@ -107,3 +107,6 @@ InitTestScene*.unity*
 Assets/_Recovery/
 
 Assets/_Recovery.meta
+
+# Local Windows demo executable and generated player data.
+/WindowsDemo/
