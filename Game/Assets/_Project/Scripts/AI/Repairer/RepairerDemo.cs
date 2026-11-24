@@ -1,5 +1,6 @@
 using FacilityEscape.Combat;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.InputSystem;
 
 namespace FacilityEscape.AI.Repairer
@@ -9,7 +10,9 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private RepairerAI repairer;
         [SerializeField] private Health sentinel;
         [SerializeField] private Transform isolatedPosition;
+        [SerializeField] private Transform sentinelGuard;
         private Vector3 originalPosition;
+        private bool sentinelIsIsolated;
 
         private void Start() => originalPosition = sentinel.transform.position;
 
@@ -25,8 +28,18 @@ namespace FacilityEscape.AI.Repairer
 
         public void ToggleSentinelReachability()
         {
-            sentinel.transform.position = sentinel.transform.position == originalPosition ?
+            Vector3 destination = !sentinelIsIsolated ?
                 isolatedPosition.position : originalPosition;
+            if (sentinel.TryGetComponent(out NavMeshAgent agent))
+            {
+                if (!agent.Warp(destination)) return;
+                if (sentinelGuard != null) sentinelGuard.position = agent.nextPosition;
+            }
+            else
+            {
+                sentinel.transform.position = destination;
+            }
+            sentinelIsIsolated = !sentinelIsIsolated;
         }
 
         private void OnGUI()

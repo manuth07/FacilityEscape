@@ -25,12 +25,19 @@ namespace FacilityEscape.AI.Repairer
         private float threatUntil;
         private float nextDecision;
         private float nextHeal;
+        private bool repairingInRange;
 
         public float RepairScore { get; private set; }
         public float EscapeScore { get; private set; }
         public float ReturnScore { get; private set; }
         public RepairerAction SelectedAction { get; private set; }
         public string Status { get; private set; }
+        public Health ActiveRepairTarget =>
+            repairingInRange && isActiveAndEnabled && agent.isOnNavMesh &&
+            repairTarget != null && repairTarget.isActiveAndEnabled && !repairTarget.IsDestroyed &&
+            repairTarget.CurrentHealth < repairTarget.MaxHealth && InRange(repairTarget, transform.position)
+                ? repairTarget
+                : null;
 
         private void Awake()
         {
@@ -43,6 +50,7 @@ namespace FacilityEscape.AI.Repairer
 
         private void OnDisable()
         {
+            repairingInRange = false;
             SoundEvents.Emitted -= Hear;
             if (agent.isOnNavMesh) agent.ResetPath();
         }
@@ -65,6 +73,7 @@ namespace FacilityEscape.AI.Repairer
 
         private void Decide()
         {
+            repairingInRange = false;
             RepairScore = EscapeScore = ReturnScore = 0f;
             Status = null;
             if (!agent.isOnNavMesh)
@@ -103,6 +112,7 @@ namespace FacilityEscape.AI.Repairer
                     repairTarget = ally;
                     if (InRange(ally, transform.position))
                     {
+                        repairingInRange = true;
                         agent.ResetPath();
                         if (Time.time >= nextHeal && ally.Heal(healAmount))
                             nextHeal = Time.time + healInterval;
