@@ -28,6 +28,7 @@ namespace FacilityEscape.AI.Sentinel
         private const float FlashDuration = 0.07f;
         private Vector3 bodyRest;
         private Vector3 recoilRest;
+        private Quaternion recoilRotation;
         private float yawVelocity;
         private float speed;
         private float stride;
@@ -67,7 +68,11 @@ namespace FacilityEscape.AI.Sentinel
                 tracer.enabled = false;
             }
             if (visualBody != null) bodyRest = visualBody.localPosition;
-            if (recoilPart != null) recoilRest = recoilPart.localPosition;
+            if (recoilPart != null)
+            {
+                recoilRest = recoilPart.localPosition;
+                recoilRotation = recoilPart.localRotation;
+            }
             if (muzzleFlash != null) muzzleFlash.SetActive(false);
         }
 
@@ -119,8 +124,12 @@ namespace FacilityEscape.AI.Sentinel
 
             float elapsed = Time.time - shotTime;
             if (recoilPart != null)
-                recoilPart.localPosition = recoilRest - Vector3.forward *
-                    (0.14f * Mathf.Clamp01(1f - elapsed / 0.16f));
+            {
+                float kick = 1f - Mathf.Clamp01(elapsed / 0.18f);
+                kick *= kick;
+                recoilPart.localPosition = recoilRest - Vector3.forward * (0.15f * kick);
+                recoilPart.localRotation = recoilRotation * Quaternion.Euler(-9f * kick, 0f, 0f);
+            }
             if (elapsed >= FlashDuration) HideShotEffects();
         }
 
@@ -136,6 +145,10 @@ namespace FacilityEscape.AI.Sentinel
             yawVelocity = 0f;
             shotTime = float.NegativeInfinity;
             if (shotSource != null) shotSource.Stop();
+            if (visualBody != null) visualBody.localPosition = bodyRest;
+            if (recoilPart != null) recoilPart.SetLocalPositionAndRotation(recoilRest, recoilRotation);
+            speed = 0f;
+            stride = 0f;
         }
 
         private void OnDestroy()
