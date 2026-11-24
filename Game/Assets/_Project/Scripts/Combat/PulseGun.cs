@@ -48,6 +48,7 @@ namespace FacilityEscape.Combat
 
         public bool TryFire()
         {
+            if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return false;
             if (!isActiveAndEnabled || playerCamera == null || !playerCamera.isActiveAndEnabled ||
                 playerMovement == null || !playerMovement.enabled || Time.time < nextShotTime)
                 return false;

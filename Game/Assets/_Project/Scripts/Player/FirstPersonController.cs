@@ -47,15 +47,16 @@ namespace FacilityEscape.Player
 
         private void OnApplicationFocus(bool focused)
         {
-            SetCursorLocked(focused);
+            SetCursorLocked(focused && FacilityEscape.Gameplay.GameFlowController.GameplayAllowed);
         }
 
         private void Update()
         {
+            if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return;
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
 
-            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            if (FacilityEscape.Gameplay.GameFlowController.Instance == null && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
                 SetCursorLocked(false);
             else if (mouse != null && mouse.leftButton.wasPressedThisFrame && Application.isFocused)
                 SetCursorLocked(true);

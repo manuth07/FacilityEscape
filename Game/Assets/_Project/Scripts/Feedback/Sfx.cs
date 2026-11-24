@@ -41,6 +41,7 @@ namespace FacilityEscape.Feedback
         /// <summary>Plays a sound at a world position (volume falls off with distance).</summary>
         public static void Play(SfxId id, Vector3 position, float volume = 1f)
         {
+            if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return;
             AudioClip clip = Get(id);
             if (clip == null) return;
 

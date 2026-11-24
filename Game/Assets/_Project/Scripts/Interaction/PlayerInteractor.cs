@@ -11,6 +11,7 @@ public class PlayerInteractor : MonoBehaviour
     private void Update()
     {
         current = null;
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return;
         Ray ray = new Ray(transform.position, transform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactMask,
                             QueryTriggerInteraction.Ignore))
@@ -29,7 +30,7 @@ public class PlayerInteractor : MonoBehaviour
 
     private void OnGUI()
     {
-        if (current == null) return;
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed || current == null) return;
         GUI.Label(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 30, 220, 30),
                   "[E] " + current.Prompt);
     }
