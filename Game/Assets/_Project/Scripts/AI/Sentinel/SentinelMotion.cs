@@ -15,7 +15,11 @@ namespace FacilityEscape.AI.Sentinel
         [SerializeField] private GameObject muzzleFlash;
         [SerializeField, Min(1)] private float turnSpeed = 540f;
 
+        [Header("Pulse audio")]
+        [SerializeField, Range(0f, 1f)] private float shotVolume = 0.85f;
+
         private NavMeshAgent agent;
+        private AudioSource shotSource;
         private Vector3 bodyRest;
         private Vector3 recoilRest;
         private float speed;
@@ -29,6 +33,17 @@ namespace FacilityEscape.AI.Sentinel
         {
             agent = GetComponent<NavMeshAgent>();
             agent.updateRotation = false;
+
+            var emitter = new GameObject("Pulse audio");
+            emitter.transform.SetParent(muzzle != null ? muzzle : transform, false);
+            if (muzzle == null) emitter.transform.localPosition = Vector3.up * 1.4f;
+            shotSource = emitter.AddComponent<AudioSource>();
+            shotSource.playOnAwake = false;
+            shotSource.spatialBlend = 1f;
+            shotSource.rolloffMode = AudioRolloffMode.Linear;
+            shotSource.minDistance = 2f;
+            shotSource.maxDistance = 23f;
+            shotSource.dopplerLevel = 0f;
             if (visualBody != null) bodyRest = visualBody.localPosition;
             if (recoilPart != null) recoilRest = recoilPart.localPosition;
             if (muzzleFlash != null) muzzleFlash.SetActive(false);
@@ -46,7 +61,8 @@ namespace FacilityEscape.AI.Sentinel
         {
             shotTime = Time.time;
             if (muzzleFlash != null) muzzleFlash.SetActive(true);
-            Sfx.Play(SfxId.EnemyShot, MuzzlePosition);
+            AudioClip clip = Sfx.GetClip(SfxId.EnemyShot);
+            if (clip != null) shotSource.PlayOneShot(clip, shotVolume);
         }
 
         private void LateUpdate()
