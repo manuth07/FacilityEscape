@@ -360,17 +360,32 @@ namespace FacilityEscape.AI.Sentinel
                 (guardPoint != null ? guardPoint.position : transform.position), guardRadius);
             if (coverPoints != null)
                 foreach (Transform point in coverPoints)
-                    if (point != null) Gizmos.DrawWireSphere(point.position, 0.3f);
+                {
+                    if (point == null) continue;
+                    Gizmos.color = point == occupiedCover ? Color.green :
+                        point == movingCover ? Color.cyan : Color.yellow;
+                    Gizmos.DrawWireSphere(point.position, 0.3f);
+                }
 
             if (requestedDestination.HasValue)
             {
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(transform.position, requestedDestination.Value);
+                Gizmos.DrawWireSphere(requestedDestination.Value, 0.18f);
+                if (agent != null && agent.isOnNavMesh && agent.hasPath)
+                {
+                    Vector3 previous = transform.position;
+                    foreach (Vector3 corner in agent.path.corners)
+                    {
+                        Gizmos.DrawLine(previous, corner);
+                        previous = corner;
+                    }
+                }
             }
-            if (visible && motion != null)
+            if (Application.isPlaying && motion != null && RemembersThreat)
             {
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(motion.EyePosition, target);
+                Gizmos.color = visible ? Color.red : new Color(1f, 0.55f, 0.12f);
+                Gizmos.DrawLine(motion.EyePosition, lastThreat);
+                Gizmos.DrawWireSphere(lastThreat, 0.15f);
             }
         }
     }
