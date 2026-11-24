@@ -11816,6 +11816,7 @@ GameObject:
   - component: {fileID: 440367673}
   - component: {fileID: 440367675}
   - component: {fileID: 440367674}
+  - component: {fileID: 440367676}
   m_Layer: 0
   m_Name: Hunter
   m_TagString: Untagged
@@ -11973,6 +11974,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.Combat.Health
   maxHealth: 100
+--- !u!114 &440367676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 440367668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acad44f567148fc478e4981f1527bdab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairableAlly
 --- !u!1001 &441570195
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16062,6 +16075,87 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 442594, guid: 1a5e2f40365fe44ada271dd97ea7506f, type: 3}
   m_PrefabInstance: {fileID: 640417673}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &643268233
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 144564457541427492, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_Name
+      value: Repairer
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -22
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2951424937898666764, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: safePoint
+      value: 
+      objectReference: {fileID: 988367575}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: playerCollider
+      value: 
+      objectReference: {fileID: 1202539687}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: retreatMarkers.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: 'retreatMarkers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1460617227}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: 'retreatMarkers.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1244781812}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: 'retreatMarkers.Array.data[2]'
+      value: 
+      objectReference: {fileID: 1589840912}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
 --- !u!1001 &649772352
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24845,6 +24939,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 978557473}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &988367574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 988367575}
+  m_Layer: 0
+  m_Name: Repairer_Home
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &988367575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988367574}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -22, y: 0.05, z: -2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2085759783}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &989420562
 GameObject:
   m_ObjectHideFlags: 0
@@ -31050,6 +31175,37 @@ Transform:
   - {fileID: 469827852}
   m_Father: {fileID: 944084802}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1244781811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1244781812}
+  m_Layer: 0
+  m_Name: Repairer_Retreat_02
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1244781812
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1244781811}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -18, y: 0.05, z: -5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2085759783}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1247162978
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36098,6 +36254,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 416390, guid: c76d2d3504ddb4847940a815cad04644, type: 3}
   m_PrefabInstance: {fileID: 1456475379}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1460617226
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1460617227}
+  m_Layer: 0
+  m_Name: Repairer_Retreat_01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1460617227
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1460617226}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -23, y: 0.05, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2085759783}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1464308896
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39296,6 +39483,37 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1589840911
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1589840912}
+  m_Layer: 0
+  m_Name: Repairer_Retreat_03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1589840912
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589840911}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -10, y: 0.05, z: -2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2085759783}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1597737714
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -40534,6 +40752,11 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1655946761}
   m_Enabled: 1
+--- !u!1 &1657156595 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 830483706025977160, guid: 3cfc447fc97d43d4887a90059b28009f, type: 3}
+  m_PrefabInstance: {fileID: 7800000000000300002}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1657750184
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41626,6 +41849,7 @@ GameObject:
   - component: {fileID: 1692277121}
   - component: {fileID: 1692277122}
   - component: {fileID: 1692277123}
+  - component: {fileID: 1692277124}
   m_Layer: 0
   m_Name: Flanker
   m_TagString: Untagged
@@ -41843,6 +42067,18 @@ MonoBehaviour:
   visibleSeconds: 3
   alwaysVisible: 0
   fillColor: {r: 1, g: 0.35, b: 0.3, a: 1}
+--- !u!114 &1692277124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692277114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acad44f567148fc478e4981f1527bdab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairableAlly
 --- !u!1 &1692534371
 GameObject:
   m_ObjectHideFlags: 0
@@ -51056,6 +51292,53 @@ Transform:
   - {fileID: 1692534372}
   m_Father: {fileID: 1692277119}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2081200880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1657156595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acad44f567148fc478e4981f1527bdab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairableAlly
+--- !u!1 &2085759782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2085759783}
+  m_Layer: 0
+  m_Name: Repairer_Navigation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2085759783
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085759782}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 988367575}
+  - {fileID: 1460617227}
+  - {fileID: 1244781812}
+  - {fileID: 1589840912}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2088060535
 GameObject:
   m_ObjectHideFlags: 0
@@ -52547,7 +52830,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 830483706025977160, guid: 3cfc447fc97d43d4887a90059b28009f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2081200880}
   m_SourcePrefab: {fileID: 100100000, guid: 3cfc447fc97d43d4887a90059b28009f, type: 3}
 --- !u!4 &7800000000000300003 stripped
 Transform:
@@ -52747,3 +53033,5 @@ SceneRoots:
   - {fileID: 630585706}
   - {fileID: 717716746}
   - {fileID: 7800000000000300001}
+  - {fileID: 643268233}
+  - {fileID: 2085759783}
