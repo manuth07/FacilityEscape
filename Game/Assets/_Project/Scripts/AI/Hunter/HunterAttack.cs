@@ -16,8 +16,8 @@ namespace FacilityEscape.AI.Hunter
         [SerializeField] private LayerMask obstructionMask = ~0;
         [SerializeField, Min(1f)] private float attackRange = 8f;
         [SerializeField, Min(1.1f)] private float preferredDistance = 5.5f;
-        [SerializeField, Min(1)] private int damage = 15;
-        [SerializeField, Min(0.1f)] private float cooldown = 1.2f;
+        [SerializeField, Min(1)] private int damage = 10;
+        [SerializeField, Min(0.1f)] private float cooldown = 1.5f;
         [SerializeField, Min(0f)] private float windUp = 0.35f;
         [SerializeField, Range(0f, 90f)] private float facingTolerance = 10f;
         [SerializeField, Min(0.01f)] private float pulseSeconds = 0.08f;

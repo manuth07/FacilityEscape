@@ -15,8 +15,8 @@ namespace FacilityEscape.AI.Flanker
     public sealed class FlankerAttack : MonoBehaviour
     {
         [Header("Damage")]
-        [SerializeField, Min(1)] private int damage = 10;
-        [SerializeField, Min(0.2f)] private float cooldown = 1.5f;
+        [SerializeField, Min(1)] private int damage = 8;
+        [SerializeField, Min(0.2f)] private float cooldown = 2f;
         [SerializeField, Min(0f)] private float windUp = 0.6f;
         [SerializeField, Min(1f)] private float maxRange = 14f;
 
@@ -85,7 +85,8 @@ namespace FacilityEscape.AI.Flanker
         /// <summary>Returns true while the aim line should be shown.</summary>
         private bool Tick()
         {
-            if (!ResolvePlayerHealth() || playerHealth.IsDestroyed)
+            if (!ResolvePlayerHealth() || !playerHealth.isActiveAndEnabled || playerHealth.IsDestroyed ||
+                flanker.Player == null || !flanker.Player.enabled || !flanker.Player.gameObject.activeInHierarchy)
             {
                 windUpEndsAt = -1f;
                 return false;

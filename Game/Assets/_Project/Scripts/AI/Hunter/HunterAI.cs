@@ -35,6 +35,7 @@ namespace FacilityEscape.AI.Hunter
         private NavMeshAgent agent;
         private HunterPatrol patrol;
         private Health health;
+        private readonly NavigationProgress progress = new NavigationProgress();
         private readonly RaycastHit[] sightHits = new RaycastHit[32];
         private float patrolSpeed;
         private float normalStoppingDistance;
@@ -87,6 +88,12 @@ namespace FacilityEscape.AI.Hunter
                 patrol.enabled = false;
                 agent.isStopped = true;
                 agent.velocity = Vector3.zero;
+                return;
+            }
+            if (State != HunterState.PATROL && State != HunterState.DEAD && progress.IsBlocked(agent))
+            {
+                agent.ResetPath();
+                ChangeState(State == HunterState.SEARCH_AREA ? HunterState.PATROL : HunterState.SEARCH_AREA);
                 return;
             }
 
@@ -300,6 +307,7 @@ namespace FacilityEscape.AI.Hunter
             }
 
             State = next;
+            progress.Reset();
             if (next == HunterState.PATROL || next == HunterState.CHASE || next == HunterState.ATTACK ||
                 next == HunterState.SEARCH_LAST_KNOWN)
                 hasSoundFocus = false;

@@ -227,7 +227,7 @@ MonoBehaviour:
   halfViewAngle: 75
   memorySeconds: 5
   hitResponseSeconds: 2
-  shotInterval: 1
+  shotInterval: 1.5
   shotDamage: 8
   activeBranch: 
 --- !u!114 &8830340841244431985

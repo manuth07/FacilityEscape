@@ -74,8 +74,8 @@ MonoBehaviour:
   safePoint: {fileID: 0}
   retreatMarkers: []
   repairRange: 1.8
-  healAmount: 12
-  healInterval: 0.7
+  healAmount: 10
+  healInterval: 1
   threatDuration: 5
   playerCollider: {fileID: 0}
   showDiagnostics: 0
