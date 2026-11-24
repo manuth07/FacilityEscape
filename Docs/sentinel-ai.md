@@ -12,16 +12,18 @@ Open the `Game/` project in Unity Editor **6000.6.2f1**. After import, use **Fac
 
 The yellow cell model marks the objective for this test. Capture the Game view and the Inspector together so the marker colours, smooth turning and branch transitions are visible.
 
-## Add it to the factory
+## Test the integrated factory Sentinel
 
-1. Open `Assets/_Project/Scenes/FacilityEscape_Main.unity` in Unity Editor **6000.6.2f1**.
-2. Choose **Facility Escape → Place Sentinel in Factory**. The tool finds Power Cell C and the existing player, uses the factory's baked robot NavMesh, and checks for at least two reachable cover points. If the prefab is missing, Unity generates it.
-3. Check the Console for the placement message, then save the scene. The Hierarchy shows **Sentinel guard station** with the prefab, guard point and cover markers.
-4. Enter Play mode and approach Power Cell C from the main factory. Shoot the Sentinel once. Try the northern or southern lane to expose its cover. Watch **Active Branch** and confirm it can navigate to the alternative marker without leaving the security area.
-5. Record the tested sequence with the Game view and Inspector visible. Commit the saved factory scene, generated prefab and materials, and their Unity-generated `.meta` files after the factory test.
+1. In Unity **6000.6.2f1**, open `Assets/_Project/Scenes/FacilityEscape_Main.unity` and expand **Sentinel guard station** in the Hierarchy. Select **Sentinel** to show **Active Branch**.
+2. In Play Mode, approach Power Cell C. Listen for the warning before the pulse, then check the muzzle flash, tracer, and recoil. Break line of sight during a warning and verify that the pulse is cancelled and your health stays the same.
+3. Approach again and shoot the Sentinel once. Use a side lane to expose its first cover spot. Capture **Relocate** and the movement to a second spot. In the Scene view, cyan shows the destination and planned path, green shows occupied cover, and the threat ray changes from red for a visible player to orange for a remembered position.
+4. Listen near and far from the Sentinel. The shot comes from the muzzle with distance falloff, and repeated shots have slight pitch variation. The prefab uses the existing Ribhav Agrawal **Laser Shot Ingame** sample. To swap it, set **Shot Clip** on **Sentinel Motion**. A blank field uses the team's sound bank.
+5. Stop and restart Play Mode to confirm the muzzle effects and recoil reset cleanly. Check the Console for new errors.
+
+The factory scene already includes the guard station. The **Place Sentinel in Factory** menu command can restore it if it is removed while editing the scene.
 
 ## Implementation
 
 The priority selector tries **Relocate**, **Seek cover**, **Attack**, **Hold cover**, then **Guard**. Cover must block the last observed threat position and be reachable by a complete path inside the guard radius. The shortest valid route wins. A cover move keeps its destination through brief losses of sight and re-evaluates it when it becomes exposed or unreachable.
 
-The agent owns position and acceleration. The motion component turns toward travel or aim and uses measured agent speed to animate the visible body. Each successful shot applies player damage and triggers recoil, muzzle flash and the existing enemy-shot sound.
+The agent owns position and acceleration. The motion component turns toward travel or aim and uses measured agent speed to animate the visible body. Each successful shot applies player damage and triggers recoil, muzzle flash, a tracer and a spatial pulse sound after an interruptible warning.
