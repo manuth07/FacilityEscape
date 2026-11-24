@@ -149,7 +149,7 @@ namespace FacilityEscape.AI.Flanker
             flashUntil = Time.time + tracerSeconds;
             ShowFlash();
 
-            SoundEvents.Emit(muzzle, shotHearingRadius, shotPriority, 1f);
+            SoundEvents.Emit(muzzle, shotHearingRadius, shotPriority, 1f, isGunfire: true);
             Sfx.Play(SfxId.EnemyShot, muzzle);
 
             if (logShots)

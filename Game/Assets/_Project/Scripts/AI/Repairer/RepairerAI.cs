@@ -6,7 +6,7 @@ using UnityEngine.AI;
 namespace FacilityEscape.AI.Repairer
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(NavMeshAgent), typeof(Health))]
     public sealed class RepairerAI : MonoBehaviour
     {
         [SerializeField] private Transform safePoint;
@@ -15,6 +15,8 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField, Min(1)] private int healAmount = 12;
         [SerializeField, Min(0.1f)] private float healInterval = 0.7f;
         [SerializeField, Min(0.1f)] private float threatDuration = 5f;
+        [SerializeField] private CharacterController playerCollider;
+        [SerializeField] private bool showDiagnostics;
 
         private const float DecisionInterval = 0.15f;
         private const float ArrivalDistance = 0.25f;
@@ -25,18 +27,34 @@ namespace FacilityEscape.AI.Repairer
         private float threatUntil;
         private float nextDecision;
         private float nextHeal;
+        private Health health;
+        private readonly Vector3[] corners = new Vector3[64];
+        private readonly RaycastHit[] sightHits = new RaycastHit[32];
 
         public float RepairScore { get; private set; }
         public float EscapeScore { get; private set; }
         public float ReturnScore { get; private set; }
         public RepairerAction SelectedAction { get; private set; }
         public string Status { get; private set; }
+        public float HoldScore => 0f;
+        public Health RepairTarget => repairTarget;
+        public float LastHealTime { get; private set; } = float.NegativeInfinity;
+        public float ThreatLevel => Time.time < threatUntil
+            ? Mathf.Clamp01((threatUntil - Time.time) / threatDuration) : 0f;
+        public bool CanRepairCurrentTarget => isActiveAndEnabled && health != null &&
+            !health.IsDestroyed && SelectedAction == RepairerAction.Repair &&
+            ValidAlly(repairTarget) && InRange(repairTarget, transform.position) &&
+            HasRepairSight(repairTarget, transform.position);
 
         private void Awake()
         {
             agent = GetComponent<NavMeshAgent>();
+            health = GetComponent<Health>();
             path = new NavMeshPath();
             agent.stoppingDistance = 0f;
+            if (playerCollider != null)
+                foreach (Collider body in GetComponentsInChildren<Collider>())
+                    Physics.IgnoreCollision(body, playerCollider, true);
         }
 
         private void OnEnable() => SoundEvents.Emitted += Hear;
@@ -44,12 +62,21 @@ namespace FacilityEscape.AI.Repairer
         private void OnDisable()
         {
             SoundEvents.Emitted -= Hear;
-            if (agent.isOnNavMesh) agent.ResetPath();
+            repairTarget = null;
+            LastHealTime = float.NegativeInfinity;
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
+            }
         }
 
         private void Hear(SoundEvent sound)
         {
-            if (!sound.IsGunfire || Vector3.Distance(transform.position, sound.Position) > sound.HearingRadius)
+            if (!isActiveAndEnabled || health == null || health.IsDestroyed ||
+                !sound.IsGunfire || sound.HearingRadius <= 0f ||
+                Vector3.Distance(transform.position, sound.Position) > sound.HearingRadius)
                 return;
 
             lastGunfire = sound;
@@ -58,6 +85,7 @@ namespace FacilityEscape.AI.Repairer
 
         private void Update()
         {
+            if (health == null || health.IsDestroyed) return;
             if (Time.time < nextDecision) return;
             nextDecision = Time.time + DecisionInterval;
             Decide();
@@ -67,7 +95,7 @@ namespace FacilityEscape.AI.Repairer
         {
             RepairScore = EscapeScore = ReturnScore = 0f;
             Status = null;
-            if (!agent.isOnNavMesh)
+            if (!agent.enabled || !agent.isOnNavMesh)
             {
                 SelectedAction = RepairerAction.Hold;
                 Status = "Repairer is off the NavMesh";
@@ -101,11 +129,14 @@ namespace FacilityEscape.AI.Repairer
                 case RepairerAction.Repair:
                     if (repairTarget != ally) nextHeal = Time.time + healInterval;
                     repairTarget = ally;
-                    if (InRange(ally, transform.position))
+                    if (InRange(ally, transform.position) && HasRepairSight(ally, transform.position))
                     {
                         agent.ResetPath();
                         if (Time.time >= nextHeal && ally.Heal(healAmount))
+                        {
+                            LastHealTime = Time.time;
                             nextHeal = Time.time + healInterval;
+                        }
                     }
                     else
                     {
@@ -131,11 +162,11 @@ namespace FacilityEscape.AI.Repairer
             Health best = null;
             destination = default;
             bool unreachable = false;
-            foreach (var marker in FindObjectsByType<RepairableAlly>(FindObjectsSortMode.None))
+            foreach (var marker in RepairableAlly.Registered)
             {
+                if (marker == null) continue;
                 Health ally = marker.Health;
-                if (!marker.isActiveAndEnabled || ally == null || ally.gameObject == gameObject ||
-                    !ally.isActiveAndEnabled || ally.IsDestroyed || ally.CurrentHealth >= ally.MaxHealth)
+                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth)
                     continue;
 
                 if (!FindApproach(ally, out Vector3 approach, out float length))
@@ -161,7 +192,7 @@ namespace FacilityEscape.AI.Repairer
         {
             destination = agent.nextPosition;
             length = 0f;
-            if (InRange(ally, destination)) return true;
+            if (InRange(ally, destination) && HasRepairSight(ally, destination)) return true;
 
             length = float.PositiveInfinity;
             Vector3 center = ally.transform.position;
@@ -173,6 +204,7 @@ namespace FacilityEscape.AI.Repairer
                     new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (approachRange - 0.05f);
                 if (TryPath(center + offset, out Vector3 point, out float distance) &&
                     (center - point).sqrMagnitude <= approachRange * approachRange &&
+                    HasRepairSight(ally, point) && HasBodyClearance(point) &&
                     distance < length)
                 {
                     destination = point;
@@ -185,7 +217,8 @@ namespace FacilityEscape.AI.Repairer
         private bool FindRetreat(out Vector3 destination)
         {
             destination = default;
-            float bestDistance = -1f;
+            float bestDistance = (agent.nextPosition - lastGunfire.Position).sqrMagnitude + 0.25f;
+            bool found = false;
             if (retreatMarkers == null) return false;
             foreach (Transform marker in retreatMarkers)
             {
@@ -194,8 +227,9 @@ namespace FacilityEscape.AI.Repairer
                 if (distance <= bestDistance) continue;
                 bestDistance = distance;
                 destination = point;
+                found = true;
             }
-            return bestDistance >= 0f;
+            return found;
         }
 
         private bool TryPath(Vector3 position, out Vector3 destination, out float length)
@@ -209,8 +243,12 @@ namespace FacilityEscape.AI.Repairer
 
             destination = hit.position;
             Vector3 previous = agent.nextPosition;
-            foreach (Vector3 corner in path.corners)
+            int count = path.GetCornersNonAlloc(corners);
+            Vector3[] points = count == corners.Length ? path.corners : corners;
+            if (points != corners) count = points.Length;
+            for (int i = 0; i < count; i++)
             {
+                Vector3 corner = points[i];
                 length += Vector3.Distance(previous, corner);
                 previous = corner;
             }
@@ -220,12 +258,60 @@ namespace FacilityEscape.AI.Repairer
         private bool InRange(Health ally, Vector3 point) =>
             (ally.transform.position - point).sqrMagnitude <= repairRange * repairRange;
 
+        private bool ValidAlly(Health ally) => ally != null && ally.gameObject != gameObject &&
+            ally.isActiveAndEnabled && !ally.IsDestroyed;
+
+        private bool HasBodyClearance(Vector3 point)
+        {
+            foreach (Collider body in Physics.OverlapCapsule(
+                point + Vector3.up * (agent.radius + 0.05f),
+                point + Vector3.up * (agent.height - agent.radius), agent.radius,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                if (!body.transform.IsChildOf(transform)) return false;
+            return true;
+        }
+
+        private bool HasRepairSight(Health ally, Vector3 point)
+        {
+            if (!ValidAlly(ally)) return false;
+            Vector3 origin = point + Vector3.up * 0.65f;
+            Vector3 direction = ally.transform.position + Vector3.up * 0.9f - origin;
+            int count = Physics.RaycastNonAlloc(origin, direction.normalized, sightHits,
+                direction.magnitude + 0.05f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            RaycastHit[] hits = count == sightHits.Length
+                ? Physics.RaycastAll(origin, direction.normalized, direction.magnitude + 0.05f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) : sightHits;
+            if (hits != sightHits) count = hits.Length;
+            Collider nearest = null;
+            float distance = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                if (hits[i].collider.transform.IsChildOf(transform) || hits[i].distance >= distance) continue;
+                nearest = hits[i].collider;
+                distance = hits[i].distance;
+            }
+            return nearest != null && nearest.GetComponentInParent<Health>() == ally;
+        }
+
         private void MoveTo(Vector3 destination)
         {
+            agent.isStopped = false;
             if ((agent.nextPosition - destination).sqrMagnitude <= ArrivalDistance * ArrivalDistance)
                 agent.ResetPath();
             else if (!agent.hasPath || (agent.destination - destination).sqrMagnitude > 0.01f)
                 agent.SetDestination(destination);
+        }
+
+        private void OnGUI()
+        {
+            if (!showDiagnostics) return;
+            GUILayout.BeginArea(new Rect(12, 200, 380, 170), GUI.skin.box);
+            GUILayout.Label("Repairer: " + SelectedAction + " | Target: " +
+                (repairTarget == null ? "none" : repairTarget.name));
+            GUILayout.Label($"Hold {HoldScore:F2} | Repair {RepairScore:F2} | Escape {EscapeScore:F2} | Return {ReturnScore:F2}");
+            GUILayout.Label($"Threat {ThreatLevel:F2} | Destination {agent.destination}");
+            if (!string.IsNullOrEmpty(Status)) GUILayout.Label(Status);
+            GUILayout.EndArea();
         }
     }
 }
