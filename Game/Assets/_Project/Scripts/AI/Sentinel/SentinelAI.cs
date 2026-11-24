@@ -18,6 +18,7 @@ namespace FacilityEscape.AI.Sentinel
         [SerializeField, Min(0.1f)] private float memorySeconds = 5f;
         [SerializeField, Min(0.1f)] private float hitResponseSeconds = 2f;
         [SerializeField, Min(0.1f)] private float shotInterval = 1f;
+        [SerializeField, Min(0f)] private float shotWindup = 0.35f;
         [SerializeField, Min(1)] private int shotDamage = 8;
         [SerializeField] private string activeBranch;
 
@@ -35,6 +36,7 @@ namespace FacilityEscape.AI.Sentinel
         private float seenUntil = float.NegativeInfinity;
         private float hitUntil = float.NegativeInfinity;
         private float nextShot;
+        private float aimStartedAt = float.NegativeInfinity;
         private int previousHealth;
         private bool visible;
         private Transform occupiedCover;
@@ -79,6 +81,7 @@ namespace FacilityEscape.AI.Sentinel
             }
 
             Sense();
+            if (!visible) CancelAim();
             // Priority selector. A successful or running child owns movement for this frame.
             if (TickCover(true) != Status.Failure) return;
             if (TickCover(false) != Status.Failure) return;
@@ -146,6 +149,7 @@ namespace FacilityEscape.AI.Sentinel
 
         private Status AdvanceCover()
         {
+            CancelAim();
             activeBranch = relocating ? "Relocate" : "Seek cover";
             if (!Drive(coverDestination))
             {
@@ -238,14 +242,30 @@ namespace FacilityEscape.AI.Sentinel
             if (Time.time < nextShot ||
                 Vector3.Angle(transform.forward, Vector3.ProjectOnPlane(aim, Vector3.up)) > 8f ||
                 IsBlocked(motion.MuzzlePosition, target))
+            {
+                CancelAim();
                 return Status.Running;
+            }
 
+            if (float.IsNegativeInfinity(aimStartedAt))
+            {
+                aimStartedAt = Time.time;
+                if (shotWindup > 0f) motion.BeginAim();
+            }
+            if (Time.time < aimStartedAt + shotWindup) return Status.Running;
+
+            CancelAim();
             if (playerHealth.TakeDamage(shotDamage))
             {
                 nextShot = Time.time + shotInterval;
                 motion.Fire();
             }
             return Status.Running;
+        }
+
+        private void CancelAim()
+        {
+            aimStartedAt = float.NegativeInfinity;
         }
 
         private Status TickHold()
@@ -298,6 +318,7 @@ namespace FacilityEscape.AI.Sentinel
 
         private void OnDisable()
         {
+            CancelAim();
             if (agent != null && agent.isOnNavMesh) Stop();
         }
 

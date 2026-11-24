@@ -58,6 +58,11 @@ namespace FacilityEscape.AI.Sentinel
                 Quaternion.LookRotation(direction), turnSpeed * Time.deltaTime);
         }
 
+        public void BeginAim()
+        {
+            Sfx.Play(SfxId.Alert, MuzzlePosition, 0.45f);
+        }
+
         public void Fire()
         {
             shotTime = Time.time;
