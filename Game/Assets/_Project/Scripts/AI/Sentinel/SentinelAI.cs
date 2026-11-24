@@ -29,6 +29,7 @@ namespace FacilityEscape.AI.Sentinel
         private Health health;
         private Health playerHealth;
         private NavMeshPath candidatePath;
+        private readonly RaycastHit[] sightHits = new RaycastHit[16];
         private Vector3 spawnPosition;
         private Vector3 spawnFacing;
         private Vector3 lastThreat;
@@ -225,11 +226,29 @@ namespace FacilityEscape.AI.Sentinel
         private bool IsBlocked(Vector3 from, Vector3 to)
         {
             Vector3 offset = to - from;
-            foreach (RaycastHit hit in Physics.RaycastAll(from, offset, offset.magnitude, sightMask,
-                         QueryTriggerInteraction.Ignore))
+            float distance = offset.magnitude;
+            if (distance < 0.001f) return false;
+
+            Vector3 direction = offset / distance;
+            int count = Physics.RaycastNonAlloc(from, direction, sightHits, distance, sightMask,
+                QueryTriggerInteraction.Ignore);
+
+            if (HasObstruction(sightHits, count)) return true;
+            if (count < sightHits.Length) return false;
+
+            // A saturated query may have omitted a wall behind ignored player or robot colliders.
+            RaycastHit[] allHits = Physics.RaycastAll(from, direction, distance, sightMask,
+                QueryTriggerInteraction.Ignore);
+            return HasObstruction(allHits, allHits.Length);
+        }
+
+        private bool HasObstruction(RaycastHit[] hits, int count)
+        {
+            for (int i = 0; i < count; i++)
             {
-                Transform body = hit.collider.transform;
-                if (body.IsChildOf(transform) || (playerHealth != null && body.IsChildOf(playerHealth.transform)))
+                Transform body = hits[i].collider.transform;
+                if (body.IsChildOf(transform) ||
+                    (playerHealth != null && body.IsChildOf(playerHealth.transform)))
                     continue;
                 return true;
             }
