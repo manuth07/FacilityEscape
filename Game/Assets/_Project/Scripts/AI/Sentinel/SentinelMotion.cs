@@ -15,6 +15,8 @@ namespace FacilityEscape.AI.Sentinel
         [SerializeField] private GameObject muzzleFlash;
         [SerializeField, Min(1)] private float turnSpeed = 540f;
 
+        [SerializeField, Min(0.01f)] private float turnSmoothing = 0.075f;
+
         [Header("Pulse audio")]
         [SerializeField] private AudioClip shotClip;
         [SerializeField, Range(0f, 1f)] private float shotVolume = 0.85f;
@@ -26,6 +28,7 @@ namespace FacilityEscape.AI.Sentinel
         private const float FlashDuration = 0.07f;
         private Vector3 bodyRest;
         private Vector3 recoilRest;
+        private float yawVelocity;
         private float speed;
         private float stride;
         private float shotTime = float.NegativeInfinity;
@@ -71,9 +74,16 @@ namespace FacilityEscape.AI.Sentinel
         public void Face(Vector3 direction)
         {
             direction.y = 0;
-            if (direction.sqrMagnitude < 0.001f) return;
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                Quaternion.LookRotation(direction), turnSpeed * Time.deltaTime);
+            if (direction.sqrMagnitude < 0.001f)
+            {
+                yawVelocity = 0f;
+                return;
+            }
+
+            float targetYaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            float yaw = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetYaw,
+                ref yawVelocity, turnSmoothing, turnSpeed, Time.deltaTime);
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
         }
 
         public void BeginAim()
@@ -123,6 +133,7 @@ namespace FacilityEscape.AI.Sentinel
         private void OnDisable()
         {
             HideShotEffects();
+            yawVelocity = 0f;
             shotTime = float.NegativeInfinity;
             if (shotSource != null) shotSource.Stop();
         }
