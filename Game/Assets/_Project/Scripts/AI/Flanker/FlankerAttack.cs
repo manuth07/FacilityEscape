@@ -15,8 +15,8 @@ namespace FacilityEscape.AI.Flanker
     public sealed class FlankerAttack : MonoBehaviour
     {
         [Header("Damage")]
-        [SerializeField, Min(1)] private int damage = 10;
-        [SerializeField, Min(0.2f)] private float cooldown = 1.5f;
+        [SerializeField, Min(1)] private int damage = 8;
+        [SerializeField, Min(0.2f)] private float cooldown = 2f;
         [SerializeField, Min(0f)] private float windUp = 0.6f;
         [SerializeField, Min(1f)] private float maxRange = 14f;
 
@@ -27,6 +27,10 @@ namespace FacilityEscape.AI.Flanker
 
         [Header("Shooting")]
         [SerializeField, Min(0f)] private float muzzleHeight = 1.4f;
+
+        [SerializeField] private Transform muzzlePoint;
+        [SerializeField] private GameObject muzzleFlash;
+        [SerializeField, Min(0.01f)] private float flashSeconds = 0.06f;
         [SerializeField] private LayerMask obstructionMask = ~0;
 
         [Header("Sound")]
@@ -42,6 +46,7 @@ namespace FacilityEscape.AI.Flanker
         private Health playerHealth;
         private LineRenderer tracer;
         private float nextShotTime;
+        private float flashEndsAt;
         private float windUpEndsAt = -1f;
         private float flashUntil;
         private float nextLookupTime;
@@ -64,10 +69,13 @@ namespace FacilityEscape.AI.Flanker
         {
             windUpEndsAt = -1f;
             if (tracer != null) tracer.enabled = false;
+            if (muzzleFlash != null) muzzleFlash.SetActive(false);
         }
 
         private void Update()
         {
+            if (muzzleFlash != null && muzzleFlash.activeSelf && Time.time >= flashEndsAt)
+                muzzleFlash.SetActive(false);
             if (Time.time < flashUntil) return; // keep the shot line visible briefly
 
             bool aiming = Tick();
@@ -77,7 +85,8 @@ namespace FacilityEscape.AI.Flanker
         /// <summary>Returns true while the aim line should be shown.</summary>
         private bool Tick()
         {
-            if (!ResolvePlayerHealth() || playerHealth.IsDestroyed)
+            if (!ResolvePlayerHealth() || !playerHealth.isActiveAndEnabled || playerHealth.IsDestroyed ||
+                flanker.Player == null || !flanker.Player.enabled || !flanker.Player.gameObject.activeInHierarchy)
             {
                 windUpEndsAt = -1f;
                 return false;
@@ -89,7 +98,7 @@ namespace FacilityEscape.AI.Flanker
                 return false;
             }
 
-            Vector3 muzzle = transform.position + Vector3.up * muzzleHeight;
+            Vector3 muzzle = MuzzlePosition();
             Vector3 target = flanker.Player.bounds.center;
             float distance = Vector3.Distance(muzzle, target);
 
@@ -114,7 +123,19 @@ namespace FacilityEscape.AI.Flanker
             nextShotTime = Time.time + cooldown;
             return false;
         }
+        private Vector3 MuzzlePosition()
+        {
+            return muzzlePoint != null
+                ? muzzlePoint.position
+                : transform.position + Vector3.up * muzzleHeight;
+        }
 
+        private void ShowFlash()
+        {
+            if (muzzleFlash == null) return;
+            muzzleFlash.SetActive(true);
+            flashEndsAt = Time.time + flashSeconds;
+        }
         private void Fire(Vector3 muzzle, Vector3 target, float distance)
         {
             float accuracy = Mathf.Lerp(closeAccuracy, farAccuracy,
@@ -127,8 +148,9 @@ namespace FacilityEscape.AI.Flanker
 
             SetTracer(muzzle, end, new Color(1f, 0.6f, 0f), 0.06f);
             flashUntil = Time.time + tracerSeconds;
+            ShowFlash();
 
-            SoundEvents.Emit(muzzle, shotHearingRadius, shotPriority, 1f);
+            SoundEvents.Emit(muzzle, shotHearingRadius, shotPriority, 1f, isGunfire: true);
             Sfx.Play(SfxId.EnemyShot, muzzle);
 
             if (logShots)

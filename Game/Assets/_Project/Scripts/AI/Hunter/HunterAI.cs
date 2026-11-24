@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using FacilityEscape.AI.Common;
+using FacilityEscape.Combat;
 
 namespace FacilityEscape.AI.Hunter
 {
@@ -9,7 +10,7 @@ namespace FacilityEscape.AI.Hunter
     [RequireComponent(typeof(NavMeshAgent), typeof(HunterPatrol))]
     public sealed class HunterAI : MonoBehaviour
     {
-        public enum HunterState { PATROL, CHASE, SEARCH_LAST_KNOWN, SEARCH_AREA, INVESTIGATE_SOUND }
+        public enum HunterState { PATROL, CHASE, SEARCH_LAST_KNOWN, SEARCH_AREA, INVESTIGATE_SOUND, ATTACK, DEAD }
 
         [SerializeField] private CharacterController player;
         [SerializeField] private Transform eyes;
@@ -21,6 +22,9 @@ namespace FacilityEscape.AI.Hunter
         [SerializeField, Min(0f)] private float searchDuration = 5f;
         [SerializeField, Min(0.5f)] private float searchRadius = 2f;
 
+        [Header("Combat (adapted from feat/hunter-combat, 6940624)")]
+        [SerializeField] private HunterAttack combat;
+
         [Header("Sound stimulus scoring")]
         [SerializeField, Min(0f)] private float priorityWeight = 1f;
         [SerializeField, Min(0f)] private float intensityWeight = 2f;
@@ -30,6 +34,9 @@ namespace FacilityEscape.AI.Hunter
 
         private NavMeshAgent agent;
         private HunterPatrol patrol;
+        private Health health;
+        private readonly NavigationProgress progress = new NavigationProgress();
+        private readonly RaycastHit[] sightHits = new RaycastHit[32];
         private float patrolSpeed;
         private float normalStoppingDistance;
         private bool normalUpdateRotation;
@@ -57,6 +64,8 @@ namespace FacilityEscape.AI.Hunter
         {
             agent = GetComponent<NavMeshAgent>();
             patrol = GetComponent<HunterPatrol>();
+            health = GetComponent<Health>();
+            if (combat == null) combat = GetComponent<HunterAttack>();
             patrolSpeed = agent.speed;
             normalStoppingDistance = agent.stoppingDistance;
             CapsuleCollider body = GetComponent<CapsuleCollider>();
@@ -72,7 +81,21 @@ namespace FacilityEscape.AI.Hunter
 
         private void Update()
         {
-            if (!agent.isOnNavMesh || player == null || eyes == null) return;
+            if (health != null && health.IsDestroyed) { EnterDead(); return; }
+            if (!agent.enabled || !agent.isOnNavMesh || player == null || eyes == null) return;
+            if (combat != null && !combat.HasLivingTarget)
+            {
+                patrol.enabled = false;
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
+                return;
+            }
+            if (State != HunterState.PATROL && State != HunterState.DEAD && progress.IsBlocked(agent))
+            {
+                agent.ResetPath();
+                ChangeState(State == HunterState.SEARCH_AREA ? HunterState.PATROL : HunterState.SEARCH_AREA);
+                return;
+            }
 
             if (Time.time >= nextVisionCheck)
             {
@@ -83,7 +106,9 @@ namespace FacilityEscape.AI.Hunter
                     // Never update this memory with an unseen player's position.
                     lastKnownPlayerPosition = player.transform.position;
                     lastSeenTime = Time.time;
-                    if (State != HunterState.CHASE) ChangeState(HunterState.CHASE);
+                    HunterState visibleState = combat != null && combat.IsInRange
+                        ? HunterState.ATTACK : HunterState.CHASE;
+                    if (State != visibleState) ChangeState(visibleState);
                 }
             }
 
@@ -94,6 +119,9 @@ namespace FacilityEscape.AI.Hunter
                     break;
                 case HunterState.CHASE:
                     UpdateChase();
+                    break;
+                case HunterState.ATTACK:
+                    UpdateAttack();
                     break;
                 case HunterState.SEARCH_LAST_KNOWN:
                     UpdateLastKnownSearch();
@@ -141,6 +169,39 @@ namespace FacilityEscape.AI.Hunter
                 ChangeState(HunterState.SEARCH_AREA);
         }
 
+        private void UpdateAttack()
+        {
+            // Recheck current visibility rather than firing from the cached perception result.
+            if (combat == null || !combat.HasLivingTarget || !CanSeePlayer())
+            {
+                playerVisible = false;
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
+                ChangeState(HunterState.CHASE);
+                return;
+            }
+            if (!combat.IsInRange)
+            {
+                ChangeState(HunterState.CHASE);
+                return;
+            }
+
+            Vector3 separation = Vector3.ProjectOnPlane(
+                player.transform.position - transform.position, Vector3.up);
+            agent.updateRotation = false;
+            if (separation.sqrMagnitude > 0.001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                    Quaternion.LookRotation(separation), agent.angularSpeed * Time.deltaTime);
+            agent.isStopped = separation.sqrMagnitude <=
+                combat.PreferredDistance * combat.PreferredDistance;
+            if (agent.isStopped) agent.velocity = Vector3.zero;
+            else if (Time.time >= nextChaseUpdate)
+            {
+                nextChaseUpdate = Time.time + 0.2f;
+                agent.SetDestination(lastKnownPlayerPosition);
+            }
+        }
+
         private void UpdateAreaSearch()
         {
             if (Time.time >= searchEndsAt)
@@ -182,7 +243,10 @@ namespace FacilityEscape.AI.Hunter
         private void OnSoundHeard(SoundEvent sound)
         {
             float score = CalculateSoundScore(sound);
-            if (agent == null || !agent.isOnNavMesh || player == null || eyes == null ||
+            if (!isActiveAndEnabled || State == HunterState.DEAD ||
+                (health != null && health.IsDestroyed) ||
+                (combat != null && !combat.HasLivingTarget) ||
+                agent == null || !agent.enabled || !agent.isOnNavMesh || player == null || eyes == null ||
                 sound.HearingRadius <= 0f || score < minimumSoundScore ||
                 Vector3.SqrMagnitude(transform.position - sound.Position) >
                 sound.HearingRadius * sound.HearingRadius || CanSeePlayer())
@@ -234,7 +298,7 @@ namespace FacilityEscape.AI.Hunter
 
         private void ChangeState(HunterState next)
         {
-            if (State == next) return;
+            if (State == next || State == HunterState.DEAD) return;
             HunterState previous = State;
             if (previous == HunterState.PATROL)
             {
@@ -243,11 +307,13 @@ namespace FacilityEscape.AI.Hunter
             }
 
             State = next;
-            if (next == HunterState.PATROL || next == HunterState.CHASE ||
+            progress.Reset();
+            if (next == HunterState.PATROL || next == HunterState.CHASE || next == HunterState.ATTACK ||
                 next == HunterState.SEARCH_LAST_KNOWN)
                 hasSoundFocus = false;
-            agent.stoppingDistance = next == HunterState.CHASE
-                ? chaseStoppingDistance : normalStoppingDistance;
+            agent.stoppingDistance = next == HunterState.ATTACK && combat != null
+                ? combat.PreferredDistance : next == HunterState.CHASE
+                    ? chaseStoppingDistance : normalStoppingDistance;
             agent.updateRotation = normalUpdateRotation;
             Debug.Log("Hunter state: " + previous + " -> " + next, this);
             if (next == HunterState.INVESTIGATE_SOUND)
@@ -264,6 +330,7 @@ namespace FacilityEscape.AI.Hunter
                     agent.isStopped = patrol.IsWaiting;
                     break;
                 case HunterState.CHASE:
+                case HunterState.ATTACK:
                     agent.speed = chaseSpeed;
                     agent.isStopped = false;
                     nextChaseUpdate = Time.time;
@@ -358,7 +425,9 @@ namespace FacilityEscape.AI.Hunter
 
         public bool CanSeePlayer()
         {
-            if (player == null || eyes == null || !player.gameObject.activeInHierarchy ||
+            if (State == HunterState.DEAD || (health != null && health.IsDestroyed) ||
+                (combat != null && !combat.HasLivingTarget) ||
+                player == null || eyes == null || !player.gameObject.activeInHierarchy ||
                 Vector3.Distance(transform.position, player.transform.position) > detectionRadius)
                 return false;
 
@@ -369,13 +438,20 @@ namespace FacilityEscape.AI.Hunter
             if (Vector3.Angle(horizontalForward, horizontalDirection) > fieldOfView * 0.5f)
                 return false;
 
-            RaycastHit[] hits = Physics.RaycastAll(eyes.position, direction.normalized,
+            int count = Physics.RaycastNonAlloc(eyes.position, direction.normalized, sightHits,
                 direction.magnitude + 0.05f, Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Ignore);
+            // NonAlloc results are unordered. Overflow must not discard a nearer wall.
+            RaycastHit[] hits = count == sightHits.Length
+                ? Physics.RaycastAll(eyes.position, direction.normalized,
+                    direction.magnitude + 0.05f, Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Ignore) : sightHits;
+            if (hits != sightHits) count = hits.Length;
             Collider nearest = null;
             float nearestDistance = float.PositiveInfinity;
-            foreach (RaycastHit hit in hits)
+            for (int i = 0; i < count; i++)
             {
+                RaycastHit hit = hits[i];
                 if (hit.collider.transform.IsChildOf(transform)) continue;
                 if (hit.distance < nearestDistance)
                 {
@@ -389,9 +465,30 @@ namespace FacilityEscape.AI.Hunter
         private void OnDisable()
         {
             SoundEvents.Emitted -= OnSoundHeard;
+            if (health != null && health.IsDestroyed)
+            {
+                EnterDead();
+                return;
+            }
             if (State != HunterState.PATROL && agent != null && agent.enabled &&
                 agent.isOnNavMesh && patrol != null)
                 ChangeState(HunterState.PATROL);
+        }
+
+        private void EnterDead()
+        {
+            if (State == HunterState.DEAD) return;
+            State = HunterState.DEAD;
+            hasSoundFocus = false;
+            SoundEvents.Emitted -= OnSoundHeard;
+            if (patrol != null) patrol.enabled = false;
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
+            }
+            Debug.Log("Hunter state: DEAD", this);
         }
     }
 }

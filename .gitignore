@@ -1,3 +1,6 @@
 # Blender backup files anywhere in the repository (keep original .blend files).
 *.blend[0-9]*
 *.blend[0-9]*.meta
+
+# Temporary development outputs (authored project assets remain tracked).
+/tmp/

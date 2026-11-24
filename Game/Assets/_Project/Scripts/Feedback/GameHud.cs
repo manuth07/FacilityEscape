@@ -23,6 +23,7 @@ namespace FacilityEscape.Feedback
         [SerializeField] private Color dangerColor = new Color(1f, 0.25f, 0.25f);
         [SerializeField] private Color enemyColor = new Color(1f, 0.35f, 0.3f);
         [SerializeField, Min(0.5f)] private float targetVisibleSeconds = 2f;
+        [SerializeField, Range(0f, 0.2f)] private float damageTintOpacity = 0.12f;
 
         private Font font;
         private Image playerFill, playerTrail, vignette, targetFill, targetTrail;
@@ -40,6 +41,17 @@ namespace FacilityEscape.Feedback
         private float flash;
         private float hitTimer;
         private bool hitKill;
+        private GameObject canvasRoot;
+        private Text objectiveText, notificationText;
+        private readonly Image[] cellIndicators = new Image[3];
+        private float notificationUntil;
+        public void SetVisible(bool visible) { if (canvasRoot != null) canvasRoot.SetActive(visible); }
+        public void Notify(string message)
+        {
+            if (notificationText == null) return;
+            notificationText.text = message;
+            notificationUntil = Time.unscaledTime + 3.5f;
+        }
 
         private const float HitMarkerSeconds = 0.18f;
 
@@ -82,11 +94,13 @@ namespace FacilityEscape.Feedback
 
         private void Update()
         {
+            if (!GameFlowController.GameplayAllowed) return;
             float dt = Time.unscaledDeltaTime;
             UpdatePlayer(dt);
             UpdateTarget(dt);
             UpdateInfo();
             UpdateMarkers(dt);
+            if (notificationText != null && Time.unscaledTime > notificationUntil) notificationText.text = "";
         }
 
         private void UpdatePlayer(float dt)
@@ -105,9 +119,10 @@ namespace FacilityEscape.Feedback
             if (lastPlayerHp < 0) lastPlayerHp = hp;
             if (hp < lastPlayerHp)
             {
-                flash = 1f;
+                flash = Mathf.Clamp01((lastPlayerHp - hp) / 20f);
                 Sfx.Play2D(SfxId.PlayerHurt);
             }
+            else if (lastPlayerHp >= 0 && hp > lastPlayerHp) Notify("HEALTH RESTORED  +" + (hp - lastPlayerHp));
             lastPlayerHp = hp;
 
             playerTrailFrac = frac > playerTrailFrac
@@ -119,13 +134,13 @@ namespace FacilityEscape.Feedback
             playerFill.color = HealthColor(frac);
             playerText.text = hp + " / " + playerHealth.MaxHealth;
 
-            flash = Mathf.MoveTowards(flash, 0f, 2.5f * dt);
+            flash = Mathf.MoveTowards(flash, 0f, 4f * dt);
             float low = (frac < 0.3f && hp > 0)
-                ? 0.08f + 0.06f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f))
+                ? 0.02f + 0.02f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f))
                 : 0f;
-            vignette.color = new Color(1f, 0f, 0f, Mathf.Max(flash * 0.3f, low));
+            vignette.color = new Color(1f, 0f, 0f, Mathf.Max(flash * damageTintOpacity, low));
 
-            centerText.gameObject.SetActive(hp <= 0);
+            centerText.gameObject.SetActive(hp <= 0 && GameFlowController.Instance == null);
         }
 
         private void UpdateTarget(float dt)
@@ -163,6 +178,9 @@ namespace FacilityEscape.Feedback
         {
             int devices = thrower != null ? thrower.Devices : -1;
             int cells = powerCells != null ? powerCells.CollectedCount : -1;
+            if (lastCells >= 0 && cells > lastCells)
+                Notify(cells >= 3 ? "EXTRACTION UNLOCKED  /  ALL CELLS RECOVERED" : "POWER CELL RECOVERED  " + cells + "/3");
+            if (lastDevices > 0 && devices == 0) Notify("NO NOISE DEVICES REMAINING");
             if (devices == lastDevices && cells == lastCells) return;
 
             lastDevices = devices;
@@ -170,7 +188,10 @@ namespace FacilityEscape.Feedback
 
             string deviceText = devices >= 0 ? devices.ToString() : "-";
             string cellText = cells >= 0 ? cells + " / " + PowerCellManager.TotalCells : "-";
-            infoText.text = "NOISE DEVICES   " + deviceText + "\nPOWER CELLS   " + cellText;
+            infoText.text = "NOISE DEVICES   " + deviceText + "   [G]";
+            for (int i = 0; i < cellIndicators.Length; i++) cellIndicators[i].color = i < cells ? new Color(0.25f, 1f, 0.65f) : new Color(0.18f, 0.27f, 0.32f);
+            objectiveText.text = cells >= 3 ? "All power cells recovered. Reach emergency extraction." :
+                (cells > 0 ? "Power cell recovered - " : "Recover backup power cells - ") + Mathf.Max(0, cells) + "/3";
         }
 
         private void UpdateMarkers(float dt)
@@ -200,6 +221,7 @@ namespace FacilityEscape.Feedback
             if (font == null) font = Font.CreateDynamicFontFromOSFont("Arial", 16);
 
             GameObject root = new GameObject("HUD Canvas", typeof(Canvas), typeof(CanvasScaler));
+            canvasRoot = root;
             root.transform.SetParent(transform, false);
 
             Canvas canvas = root.GetComponent<Canvas>();
@@ -220,9 +242,19 @@ namespace FacilityEscape.Feedback
             BuildTargetPanel(parent);
             BuildInfoPanel(parent);
             BuildCrosshair(parent);
+            Image objective = NewImage("Mission objective", parent, new Color(0.02f, 0.05f, 0.07f, 0.85f));
+            Place(objective.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(30, -30), new Vector2(650, 105));
+            Text heading = NewText("Mission label", objective.transform, 17, TextAnchor.MiddleLeft, new Color(0.23f, 0.9f, 1f));
+            heading.text = "EMERGENCY PROTOCOL  /  CURRENT OBJECTIVE";
+            Place(heading.rectTransform, Vector2.zero, Vector2.zero, new Vector2(18, 68), new Vector2(615, 28));
+            objectiveText = NewText("Objective", objective.transform, 23, TextAnchor.MiddleLeft, Color.white);
+            objectiveText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Place(objectiveText.rectTransform, Vector2.zero, Vector2.zero, new Vector2(18, 8), new Vector2(615, 60));
+            notificationText = NewText("Mission notification", parent, 25, TextAnchor.MiddleCenter, new Color(0.35f, 1f, 0.8f));
+            Place(notificationText.rectTransform, new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1100, 60));
 
             centerText = NewText("CenterText", parent, 64, TextAnchor.MiddleCenter, dangerColor);
-            centerText.text = "SYSTEM FAILURE";
+            centerText.text = "GAME OVER";
             Place(centerText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                   new Vector2(0f, 140f), new Vector2(900f, 100f));
             centerText.gameObject.SetActive(false);
@@ -267,8 +299,16 @@ namespace FacilityEscape.Feedback
             Place(panel.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f),
                   new Vector2(-30f, 30f), new Vector2(330f, 84f));
 
-            infoText = NewText("Info", panel.transform, 22, TextAnchor.MiddleLeft, Color.white);
-            Place(infoText.rectTransform, Vector2.zero, Vector2.zero, new Vector2(16f, 8f), new Vector2(300f, 68f));
+            infoText = NewText("Info", panel.transform, 20, TextAnchor.MiddleLeft, Color.white);
+            Place(infoText.rectTransform, Vector2.zero, Vector2.zero, new Vector2(16f, 44f), new Vector2(310f, 34f));
+            Text label = NewText("Backup cells label", panel.transform, 17, TextAnchor.MiddleLeft, Color.white);
+            label.text = "BACKUP CELLS";
+            Place(label.rectTransform, Vector2.zero, Vector2.zero, new Vector2(16, 10), new Vector2(170, 28));
+            for (int i = 0; i < 3; i++)
+            {
+                cellIndicators[i] = NewImage("Cell indicator " + i, panel.transform, Color.gray);
+                Place(cellIndicators[i].rectTransform, Vector2.zero, Vector2.zero, new Vector2(190 + i * 39, 14), new Vector2(28, 20));
+            }
         }
 
         private void BuildCrosshair(Transform parent)

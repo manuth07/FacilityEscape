@@ -14,6 +14,7 @@ public class PlayerThrower : MonoBehaviour
 
     private void Update()
     {
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return;
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -21,12 +22,17 @@ public class PlayerThrower : MonoBehaviour
             && keyboard.gKey.wasPressedThisFrame
             && devices > 0 && Time.time >= nextThrowTime)
         {
-            Throw();
+            TryThrow();
         }
     }
 
-    private void Throw()
+    public bool TryThrow()
     {
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return false;
+        var health = GetComponentInParent<FacilityEscape.Combat.Health>();
+        if (!isActiveAndEnabled || (health != null && health.IsDestroyed) || devices <= 0 ||
+            Time.time < nextThrowTime || noiseDevicePrefab == null ||
+            noiseDevicePrefab.GetComponent<Rigidbody>() == null) return false;
         devices--;
         nextThrowTime = Time.time + cooldown;
 
@@ -35,6 +41,7 @@ public class PlayerThrower : MonoBehaviour
                                         Quaternion.identity);
         Rigidbody rb = device.GetComponent<Rigidbody>();
         rb.AddForce(transform.forward * throwForce + Vector3.up * 3f, ForceMode.Impulse);
+        return true;
     }
 
     

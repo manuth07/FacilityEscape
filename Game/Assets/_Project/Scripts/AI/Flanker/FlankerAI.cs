@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.AI;
 using FacilityEscape.AI.Common;
 using FacilityEscape.Feedback;
+using UnityEngine.InputSystem;
+using FacilityEscape.Combat;
 
 namespace FacilityEscape.AI.Flanker
 {
@@ -60,11 +62,14 @@ namespace FacilityEscape.AI.Flanker
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
-        [SerializeField] private bool showOverlay = true;
+        [SerializeField] private bool showOverlay = false;
         [SerializeField] private bool logDecisions = true;
 
         private NavMeshAgent agent;
         private NavMeshPath path;
+        private Health playerHealth;
+        private readonly NavigationProgress progress = new NavigationProgress();
+        private float retryReturnAt;
         private readonly Vector3[] cornerBuffer = new Vector3[64];
         private readonly List<FlankCandidate> working = new List<FlankCandidate>();
         private readonly List<FlankCandidate> lastCandidates = new List<FlankCandidate>();
@@ -96,6 +101,7 @@ namespace FacilityEscape.AI.Flanker
         {
             agent = GetComponent<NavMeshAgent>();
             path = new NavMeshPath();
+            if (player != null) playerHealth = player.GetComponentInParent<Health>();
             agent.speed = moveSpeed;
         }
 
@@ -135,7 +141,24 @@ namespace FacilityEscape.AI.Flanker
 
         private void Update()
         {
-            if (player == null || !agent.isOnNavMesh) return;
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.tabKey.wasPressedThisFrame)
+            {
+                showOverlay = !showOverlay; // Tab toggles the debug overlay
+                Debug.Log("Flanker overlay: " + (showOverlay ? "on" : "off"), this);
+            }
+
+            if (!agent.enabled || !agent.isOnNavMesh) return;
+            if (!LivingPlayer)
+            {
+                StopAllCoroutines();
+                isEvaluating = false;
+                hasTarget = false;
+                agent.ResetPath();
+                ChangeState(FlankerState.IDLE);
+                agent.isStopped = true;
+                return;
+            }
 
             if (Time.time >= nextSenseTime)
             {
@@ -162,7 +185,7 @@ namespace FacilityEscape.AI.Flanker
 
         private void OnSoundHeard(SoundEvent sound)
         {
-            if (!isActiveAndEnabled) return;
+            if (!isActiveAndEnabled || !LivingPlayer) return;
             if (sound.Priority < minimumSoundPriority) return;
             if (Vector3.Distance(transform.position, sound.Position) > sound.HearingRadius) return;
             Alert("heard gunfire");
@@ -170,6 +193,7 @@ namespace FacilityEscape.AI.Flanker
 
         private bool CanSeePlayer()
         {
+            if (!LivingPlayer) return false;
             Vector3 from = transform.position + Vector3.up * eyeHeight;
             Vector3 to = PlayerEyePosition;
             if ((to - from).sqrMagnitude > detectionRadius * detectionRadius) return false;
@@ -180,6 +204,10 @@ namespace FacilityEscape.AI.Flanker
 
             return hit.collider.transform.IsChildOf(player.transform);
         }
+
+        private bool LivingPlayer => player != null && player.enabled &&
+            player.gameObject.activeInHierarchy && playerHealth != null &&
+            playerHealth.isActiveAndEnabled && !playerHealth.IsDestroyed;
 
         private void Alert(string reason)
         {
@@ -240,6 +268,7 @@ namespace FacilityEscape.AI.Flanker
         {
             if (State == next) return;
             State = next;
+            progress.Reset();
             if (logDecisions) Debug.Log($"Flanker -> {next} ({lastReason})", this);
 
             switch (next)
@@ -261,13 +290,22 @@ namespace FacilityEscape.AI.Flanker
                     hasBest = false;
                     hasTarget = false;
                     agent.isStopped = false;
-                    agent.SetDestination(homePosition);
+                    retryReturnAt = Time.time;
+                    TryReturnHome();
                     break;
             }
         }
 
         private void UpdateFlank()
         {
+            if (hasTarget && progress.IsBlocked(agent))
+            {
+                agent.ResetPath();
+                hasTarget = false;
+                hasBest = false;
+                nextEvaluationTime = Time.time + 0.5f;
+                progress.Reset();
+            }
             if (hasTarget && !agent.pathPending)
             {
                 bool pathBroken = agent.pathStatus != NavMeshPathStatus.PathComplete;
@@ -313,9 +351,39 @@ namespace FacilityEscape.AI.Flanker
 
         private void UpdateReturn()
         {
+            if (!agent.hasPath && !agent.pathPending)
+            {
+                if ((transform.position - homePosition).sqrMagnitude <= arriveDistance * arriveDistance)
+                    ChangeState(FlankerState.IDLE);
+                else if (Time.time >= retryReturnAt) TryReturnHome();
+                return;
+            }
+            if (progress.IsBlocked(agent))
+            {
+                agent.ResetPath();
+                agent.isStopped = true;
+                retryReturnAt = Time.time + 1f;
+                progress.Reset();
+                return;
+            }
             if (agent.pathPending) return;
-            if (agent.remainingDistance <= Mathf.Max(arriveDistance, agent.stoppingDistance))
+            if (agent.pathStatus == NavMeshPathStatus.PathComplete &&
+                agent.remainingDistance <= Mathf.Max(arriveDistance, agent.stoppingDistance))
                 ChangeState(FlankerState.IDLE);
+        }
+
+        private void TryReturnHome()
+        {
+            retryReturnAt = Time.time + 1f;
+            progress.Reset();
+            if (!agent.CalculatePath(homePosition, path) || path.status != NavMeshPathStatus.PathComplete)
+            {
+                agent.ResetPath();
+                agent.isStopped = true;
+                return;
+            }
+            agent.isStopped = false;
+            agent.SetPath(path);
         }
 
         // ------------------------------------------------- candidate generation
@@ -326,6 +394,7 @@ namespace FacilityEscape.AI.Flanker
             working.Clear();
             RefreshActiveWeights();
 
+            if (!LivingPlayer) { isEvaluating = false; yield break; }
             Vector3 center = player.transform.position;
             Vector3 eyes = PlayerEyePosition;
             Vector3 look = PlayerLookDirection;
