@@ -443,6 +443,7 @@ GameObject:
   - component: {fileID: 4642089863440571393}
   - component: {fileID: 237560496698883663}
   - component: {fileID: 8830340841244431985}
+  - component: {fileID: 5525089357137400776}
   m_Layer: 0
   m_Name: Sentinel
   m_TagString: Untagged
@@ -586,6 +587,18 @@ MonoBehaviour:
   visibleSeconds: 3
   alwaysVisible: 0
   fillColor: {r: 1, g: 0.35, b: 0.3, a: 1}
+--- !u!114 &5525089357137400776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 830483706025977160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acad44f567148fc478e4981f1527bdab, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairableAlly
 --- !u!1 &873701346533549830
 GameObject:
   m_ObjectHideFlags: 0

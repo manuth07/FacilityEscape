@@ -40,6 +40,8 @@ namespace FacilityEscape.AI.Repairer
         public RepairerAction SelectedAction { get; private set; }
         public string Status { get; private set; }
         public float HoldScore => 0f;
+        public Health ActiveRepairTarget => agent.enabled && agent.isOnNavMesh && CanRepairCurrentTarget &&
+            repairTarget.CurrentHealth < repairTarget.MaxHealth ? repairTarget : null;
         public Health RepairTarget => repairTarget;
         public float LastHealTime { get; private set; } = float.NegativeInfinity;
         public float ThreatLevel => Time.time < threatUntil
