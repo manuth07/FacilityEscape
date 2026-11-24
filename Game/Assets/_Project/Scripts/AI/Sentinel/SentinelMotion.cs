@@ -21,6 +21,9 @@ namespace FacilityEscape.AI.Sentinel
 
         private NavMeshAgent agent;
         private AudioSource shotSource;
+        private LineRenderer tracer;
+        private Material tracerMaterial;
+        private const float FlashDuration = 0.07f;
         private Vector3 bodyRest;
         private Vector3 recoilRest;
         private float speed;
@@ -45,6 +48,21 @@ namespace FacilityEscape.AI.Sentinel
             shotSource.minDistance = 2f;
             shotSource.maxDistance = 23f;
             shotSource.dopplerLevel = 0f;
+
+            Shader shader = Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                tracer = emitter.AddComponent<LineRenderer>();
+                tracerMaterial = new Material(shader);
+                tracer.sharedMaterial = tracerMaterial;
+                tracer.useWorldSpace = true;
+                tracer.positionCount = 2;
+                tracer.startWidth = 0.055f;
+                tracer.endWidth = 0.02f;
+                tracer.startColor = new Color(1f, 0.75f, 0.3f);
+                tracer.endColor = new Color(1f, 0.35f, 0.08f);
+                tracer.enabled = false;
+            }
             if (visualBody != null) bodyRest = visualBody.localPosition;
             if (recoilPart != null) recoilRest = recoilPart.localPosition;
             if (muzzleFlash != null) muzzleFlash.SetActive(false);
@@ -63,9 +81,15 @@ namespace FacilityEscape.AI.Sentinel
             Sfx.Play(SfxId.Alert, MuzzlePosition, 0.45f);
         }
 
-        public void Fire()
+        public void Fire(Vector3 impactPoint)
         {
             shotTime = Time.time;
+            if (tracer != null)
+            {
+                tracer.SetPosition(0, MuzzlePosition);
+                tracer.SetPosition(1, impactPoint);
+                tracer.enabled = true;
+            }
             if (muzzleFlash != null) muzzleFlash.SetActive(true);
             AudioClip clip = shotClip != null ? shotClip : Sfx.GetClip(SfxId.EnemyShot);
             if (clip != null)
@@ -87,8 +111,25 @@ namespace FacilityEscape.AI.Sentinel
             if (recoilPart != null)
                 recoilPart.localPosition = recoilRest - Vector3.forward *
                     (0.14f * Mathf.Clamp01(1f - elapsed / 0.16f));
-            if (muzzleFlash != null && elapsed >= 0.07f && muzzleFlash.activeSelf)
-                muzzleFlash.SetActive(false);
+            if (elapsed >= FlashDuration) HideShotEffects();
+        }
+
+        private void HideShotEffects()
+        {
+            if (muzzleFlash != null && muzzleFlash.activeSelf) muzzleFlash.SetActive(false);
+            if (tracer != null) tracer.enabled = false;
+        }
+
+        private void OnDisable()
+        {
+            HideShotEffects();
+            shotTime = float.NegativeInfinity;
+            if (shotSource != null) shotSource.Stop();
+        }
+
+        private void OnDestroy()
+        {
+            if (tracerMaterial != null) Destroy(tracerMaterial);
         }
     }
 }

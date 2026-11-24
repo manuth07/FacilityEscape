@@ -258,7 +258,7 @@ namespace FacilityEscape.AI.Sentinel
             if (playerHealth.TakeDamage(shotDamage))
             {
                 nextShot = Time.time + shotInterval;
-                motion.Fire();
+                motion.Fire(target);
             }
             return Status.Running;
         }
