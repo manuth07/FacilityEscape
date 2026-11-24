@@ -14,6 +14,7 @@ public class PlayerThrower : MonoBehaviour
 
     private void Update()
     {
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return;
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -27,6 +28,7 @@ public class PlayerThrower : MonoBehaviour
 
     public bool TryThrow()
     {
+        if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed) return false;
         var health = GetComponentInParent<FacilityEscape.Combat.Health>();
         if (!isActiveAndEnabled || (health != null && health.IsDestroyed) || devices <= 0 ||
             Time.time < nextThrowTime || noiseDevicePrefab == null ||

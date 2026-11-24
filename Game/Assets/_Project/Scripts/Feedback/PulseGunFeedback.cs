@@ -64,6 +64,11 @@ namespace FacilityEscape.Feedback
 
         private void Update()
         {
+            if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed)
+            {
+                if (tracer != null) tracer.enabled = false;
+                return;
+            }
             if (gun == null || playerCamera == null) return;
 
             // Handle the shot first, using what the crosshair was over on the previous frame

@@ -17,6 +17,7 @@ namespace FacilityEscape.Gameplay
 
         public bool TryCollect(CharacterController collector)
         {
+            if (!GameFlowController.GameplayAllowed) return false;
             if (collected || manager == null || !gameObject.activeInHierarchy ||
                 !manager.TryRegisterCollection(this, collector))
                 return false;

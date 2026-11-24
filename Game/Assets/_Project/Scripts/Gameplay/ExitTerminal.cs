@@ -24,6 +24,7 @@ namespace FacilityEscape.Gameplay
 
         private void Update()
         {
+            if (!GameFlowController.GameplayAllowed) return;
             RefreshVisual();
             if (!HasEscaped && Application.isFocused &&
                 Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
@@ -44,7 +45,7 @@ namespace FacilityEscape.Gameplay
 
         public bool TryActivate()
         {
-            if (HasEscaped || !CanInteract())
+            if (!GameFlowController.GameplayAllowed || HasEscaped || !CanInteract())
                 return false;
 
             RefreshVisual();
@@ -55,6 +56,12 @@ namespace FacilityEscape.Gameplay
                 return false;
             }
 
+            if (GameFlowController.Instance != null)
+            {
+                if (!GameFlowController.Instance.BeginExtraction(this)) return false;
+                HasEscaped = true;
+                return true;
+            }
             HasEscaped = true;
             // The current movement component restores the original camera when disabled.
             // Keep the win view on the player's camera after stopping movement.
@@ -85,6 +92,7 @@ namespace FacilityEscape.Gameplay
 
         private void OnGUI()
         {
+            if (GameFlowController.Instance != null) return;
             if (!HasEscaped) return;
             if (winStyle == null) winStyle = new GUIStyle(GUI.skin.label);
             // Reapply style during each GUI pass, including resized Game views.
@@ -103,6 +111,16 @@ namespace FacilityEscape.Gameplay
             GUI.color = Color.white;
             GUI.Label(panel, "ESCAPE SUCCESSFUL", winStyle);
             GUI.color = previousColor;
+        }
+
+        public void ShowExtractionProgress(float progress)
+        {
+            if (statusRenderer == null) return;
+            if (statusProperties == null) statusProperties = new MaterialPropertyBlock();
+            Color color = Color.Lerp(new Color(1f, 0.55f, 0.05f), new Color(0.05f, 1f, 0.5f), progress);
+            statusProperties.SetColor("_BaseColor", color);
+            statusProperties.SetColor("_EmissionColor", color * (1.5f + 0.4f * Mathf.Sin(Time.unscaledTime * 8f)));
+            statusRenderer.SetPropertyBlock(statusProperties);
         }
     }
 }

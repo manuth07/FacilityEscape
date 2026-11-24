@@ -18,7 +18,7 @@ namespace FacilityEscape.Combat
 
         public bool TakeDamage(int amount)
         {
-            if (!isActiveAndEnabled || amount <= 0 || IsDestroyed)
+            if (!FacilityEscape.Gameplay.GameFlowController.GameplayAllowed || !isActiveAndEnabled || amount <= 0 || IsDestroyed)
                 return false;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
@@ -26,7 +26,8 @@ namespace FacilityEscape.Combat
             if (IsDestroyed)
             {
                 Debug.Log($"{name} destroyed", this);
-                gameObject.SetActive(false);
+                if (!FacilityEscape.Gameplay.GameFlowController.HandlePlayerDefeat(this))
+                    gameObject.SetActive(false);
             }
             return true;
         }

@@ -16,6 +16,7 @@ namespace FacilityEscape.Gameplay
 
         public bool TryCollect(CharacterController player)
         {
+            if (!GameFlowController.GameplayAllowed) return false;
             if (collected || !isActiveAndEnabled || player == null || !player.enabled ||
                 !player.gameObject.activeInHierarchy || player.GetComponent<FirstPersonController>() == null)
                 return false;
