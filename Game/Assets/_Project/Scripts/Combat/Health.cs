@@ -30,5 +30,14 @@ namespace FacilityEscape.Combat
             }
             return true;
         }
+
+        public bool Heal(int amount)
+        {
+            if (!isActiveAndEnabled || IsDestroyed || amount <= 0 || CurrentHealth >= MaxHealth)
+                return false;
+
+            CurrentHealth += Mathf.Min(amount, MaxHealth - CurrentHealth);
+            return true;
+        }
     }
 }
