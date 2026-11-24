@@ -222,7 +222,7 @@ namespace FacilityEscape.Feedback
             BuildCrosshair(parent);
 
             centerText = NewText("CenterText", parent, 64, TextAnchor.MiddleCenter, dangerColor);
-            centerText.text = "SYSTEM FAILURE";
+            centerText.text = "GAME OVER";
             Place(centerText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                   new Vector2(0f, 140f), new Vector2(900f, 100f));
             centerText.gameObject.SetActive(false);
