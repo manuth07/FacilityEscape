@@ -11956,8 +11956,8 @@ MonoBehaviour:
     m_Bits: 4294967295
   attackRange: 8
   preferredDistance: 5.5
-  damage: 15
-  cooldown: 1.2
+  damage: 10
+  cooldown: 1.5
   windUp: 0.35
   facingTolerance: 10
   pulseSeconds: 0.08
@@ -12391,6 +12391,68 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffffi
+--- !u!1001 &463209782
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 800114296}
+    m_Modifications:
+    - target: {fileID: 4357186325522431622, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_Name
+      value: HealthPickup_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+--- !u!4 &463209783 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+  m_PrefabInstance: {fileID: 463209782}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &469827851
 GameObject:
   m_ObjectHideFlags: 0
@@ -15538,6 +15600,7 @@ MonoBehaviour:
   dangerColor: {r: 1, g: 0.25, b: 0.25, a: 1}
   enemyColor: {r: 1, g: 0.35, b: 0.3, a: 1}
   targetVisibleSeconds: 2
+  damageTintOpacity: 0.12
 --- !u!4 &630585706
 Transform:
   m_ObjectHideFlags: 0
@@ -20581,6 +20644,39 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 799778502}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &800114295
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 800114296}
+  m_Layer: 0
+  m_Name: HealthPickups
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &800114296
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 800114295}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 463209783}
+  - {fileID: 1494513694}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &802379631
 GameObject:
   m_ObjectHideFlags: 0
@@ -36986,6 +37082,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1492074781}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &1494513693
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 800114296}
+    m_Modifications:
+    - target: {fileID: 4357186325522431622, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_Name
+      value: HealthPickup_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -28
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+--- !u!4 &1494513694 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8921550249463109446, guid: 0468ffc1c69ed16448f53e3e3fded237, type: 3}
+  m_PrefabInstance: {fileID: 1494513693}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1499253760
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41987,7 +42145,7 @@ Transform:
   m_GameObject: {fileID: 1692277114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16.5, y: 0.05, z: -1.5}
+  m_LocalPosition: {x: -23, y: 0.05, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -42031,8 +42189,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d2e59e62a353c94e96b7b06f698b021, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Flanker.FlankerAttack
-  damage: 10
-  cooldown: 1.5
+  damage: 8
+  cooldown: 2
   windUp: 0.6
   maxRange: 14
   closeAccuracy: 0.85
@@ -53035,3 +53193,4 @@ SceneRoots:
   - {fileID: 7800000000000300001}
   - {fileID: 643268233}
   - {fileID: 2085759783}
+  - {fileID: 800114296}
