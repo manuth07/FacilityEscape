@@ -23,6 +23,7 @@ namespace FacilityEscape.Feedback
         [SerializeField] private Color dangerColor = new Color(1f, 0.25f, 0.25f);
         [SerializeField] private Color enemyColor = new Color(1f, 0.35f, 0.3f);
         [SerializeField, Min(0.5f)] private float targetVisibleSeconds = 2f;
+        [SerializeField, Range(0f, 0.2f)] private float damageTintOpacity = 0.12f;
 
         private Font font;
         private Image playerFill, playerTrail, vignette, targetFill, targetTrail;
@@ -105,7 +106,7 @@ namespace FacilityEscape.Feedback
             if (lastPlayerHp < 0) lastPlayerHp = hp;
             if (hp < lastPlayerHp)
             {
-                flash = 1f;
+                flash = Mathf.Clamp01((lastPlayerHp - hp) / 20f);
                 Sfx.Play2D(SfxId.PlayerHurt);
             }
             lastPlayerHp = hp;
@@ -119,11 +120,11 @@ namespace FacilityEscape.Feedback
             playerFill.color = HealthColor(frac);
             playerText.text = hp + " / " + playerHealth.MaxHealth;
 
-            flash = Mathf.MoveTowards(flash, 0f, 2.5f * dt);
+            flash = Mathf.MoveTowards(flash, 0f, 4f * dt);
             float low = (frac < 0.3f && hp > 0)
-                ? 0.08f + 0.06f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f))
+                ? 0.02f + 0.02f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f))
                 : 0f;
-            vignette.color = new Color(1f, 0f, 0f, Mathf.Max(flash * 0.3f, low));
+            vignette.color = new Color(1f, 0f, 0f, Mathf.Max(flash * damageTintOpacity, low));
 
             centerText.gameObject.SetActive(hp <= 0);
         }

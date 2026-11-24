@@ -12,8 +12,8 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private Transform safePoint;
         [SerializeField] private Transform[] retreatMarkers;
         [SerializeField, Min(0.5f)] private float repairRange = 1.8f;
-        [SerializeField, Min(1)] private int healAmount = 12;
-        [SerializeField, Min(0.1f)] private float healInterval = 0.7f;
+        [SerializeField, Min(1)] private int healAmount = 10;
+        [SerializeField, Min(0.1f)] private float healInterval = 1f;
         [SerializeField, Min(0.1f)] private float threatDuration = 5f;
         [SerializeField] private CharacterController playerCollider;
         [SerializeField] private bool showDiagnostics;
@@ -30,6 +30,9 @@ namespace FacilityEscape.AI.Repairer
         private Health health;
         private readonly Vector3[] corners = new Vector3[64];
         private readonly RaycastHit[] sightHits = new RaycastHit[32];
+        private readonly NavigationProgress progress = new NavigationProgress();
+        private Health blockedAlly;
+        private float retryAllyAt;
 
         public float RepairScore { get; private set; }
         public float EscapeScore { get; private set; }
@@ -86,6 +89,17 @@ namespace FacilityEscape.AI.Repairer
         private void Update()
         {
             if (health == null || health.IsDestroyed) return;
+            if (progress.IsBlocked(agent))
+            {
+                blockedAlly = repairTarget;
+                retryAllyAt = Time.time + 2f;
+                repairTarget = null;
+                SelectedAction = RepairerAction.Hold;
+                Status = "Movement blocked; reevaluating";
+                agent.ResetPath();
+                progress.Reset();
+                nextDecision = Time.time + 0.5f;
+            }
             if (Time.time < nextDecision) return;
             nextDecision = Time.time + DecisionInterval;
             Decide();
@@ -166,7 +180,8 @@ namespace FacilityEscape.AI.Repairer
             {
                 if (marker == null) continue;
                 Health ally = marker.Health;
-                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth)
+                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth ||
+                    (ally == blockedAlly && Time.time < retryAllyAt))
                     continue;
 
                 if (!FindApproach(ally, out Vector3 approach, out float length))

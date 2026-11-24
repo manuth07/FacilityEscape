@@ -14,6 +14,7 @@ public class Door : MonoBehaviour, IInteractable
     private bool isLocked;
     private Quaternion closedRot;
     private Quaternion openRot;
+    private NavMeshObstacle openPanelObstacle;
 
     public string Prompt => isLocked ? lockedPrompt : (isOpen ? "Close door" : "Open door");
     public bool IsOpen => isOpen;
@@ -25,6 +26,21 @@ public class Door : MonoBehaviour, IInteractable
         openRot = closedRot * Quaternion.Euler(0f, openAngle, 0f);
         isLocked = startsLocked;
         if (obstacle != null) obstacle.enabled = true;
+        if (obstacle != null)
+        {
+            // The opening blocker is still released only when the door is fully open.
+            // Keep the physical open leaf carved too, so agents route around its side.
+            var panel = new GameObject("OpenPanelNavigation");
+            panel.transform.SetParent(obstacle.transform, false);
+            openPanelObstacle = panel.AddComponent<NavMeshObstacle>();
+            openPanelObstacle.shape = obstacle.shape;
+            openPanelObstacle.size = obstacle.size;
+            openPanelObstacle.center = obstacle.center;
+            openPanelObstacle.carving = true;
+            openPanelObstacle.carveOnlyStationary = true;
+            openPanelObstacle.carvingTimeToStationary = 0.1f;
+            openPanelObstacle.enabled = false;
+        }
     }
 
     public void Interact()
@@ -57,5 +73,7 @@ public class Door : MonoBehaviour, IInteractable
         if (obstacle == null) return;
         bool shouldBlock = !isOpen || Quaternion.Angle(transform.localRotation, openRot) > 0.5f;
         if (obstacle.enabled != shouldBlock) obstacle.enabled = shouldBlock;
+        if (openPanelObstacle != null && openPanelObstacle.enabled == shouldBlock)
+            openPanelObstacle.enabled = !shouldBlock;
     }
 }

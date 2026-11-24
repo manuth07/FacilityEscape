@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using FacilityEscape.AI.Common;
 
 namespace FacilityEscape.AI.Hunter
 {
@@ -14,6 +15,7 @@ namespace FacilityEscape.AI.Hunter
         private int currentPoint;
         private bool waiting;
         private float resumeTime;
+        private readonly NavigationProgress progress = new NavigationProgress();
 
         public int CurrentWaypointIndex => currentPoint;
         public bool IsWaiting => waiting;
@@ -57,6 +59,16 @@ namespace FacilityEscape.AI.Hunter
                 return;
             }
 
+            if (progress.IsBlocked(agent))
+            {
+                // Skip this waypoint after a bounded wait; retry it on a later circuit.
+                agent.ResetPath();
+                agent.isStopped = true;
+                waiting = true;
+                resumeTime = Time.time + Mathf.Max(1f, waitAtPoint);
+                progress.Reset();
+                return;
+            }
             if (agent.pathPending || agent.pathStatus != NavMeshPathStatus.PathComplete)
                 return;
 
@@ -71,11 +83,12 @@ namespace FacilityEscape.AI.Hunter
 
         private void GoToCurrentPoint()
         {
+            progress.Reset();
             agent.isStopped = false;
             if (!agent.SetDestination(patrolPoints[currentPoint].position))
             {
-                Debug.LogError("Hunter could not set its patrol destination.", this);
-                enabled = false;
+                waiting = true;
+                resumeTime = Time.time + Mathf.Max(1f, waitAtPoint);
             }
         }
 

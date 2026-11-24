@@ -1,6 +1,7 @@
 using FacilityEscape.Combat;
 using UnityEngine;
 using UnityEngine.AI;
+using FacilityEscape.AI.Common;
 
 namespace FacilityEscape.AI.Sentinel
 {
@@ -17,7 +18,7 @@ namespace FacilityEscape.AI.Sentinel
         [SerializeField, Range(1, 180)] private float halfViewAngle = 75f;
         [SerializeField, Min(0.1f)] private float memorySeconds = 5f;
         [SerializeField, Min(0.1f)] private float hitResponseSeconds = 2f;
-        [SerializeField, Min(0.1f)] private float shotInterval = 1f;
+        [SerializeField, Min(0.1f)] private float shotInterval = 1.5f;
         [SerializeField, Min(1)] private int shotDamage = 8;
         [SerializeField] private string activeBranch;
 
@@ -42,6 +43,9 @@ namespace FacilityEscape.AI.Sentinel
         private Vector3 coverDestination;
         private Vector3? requestedDestination;
         private bool relocating;
+        private readonly NavigationProgress progress = new NavigationProgress();
+        private float retryMoveAt;
+        private Vector3? failedDestination;
 
         private Vector3 GuardPosition => guardPoint != null ? guardPoint.position : spawnPosition;
         private bool RemembersThreat => Time.time < seenUntil;
@@ -72,7 +76,7 @@ namespace FacilityEscape.AI.Sentinel
 
         private void Update()
         {
-            if (!agent.isOnNavMesh)
+            if (!agent.enabled || !agent.isOnNavMesh)
             {
                 activeBranch = "Waiting for NavMesh";
                 return;
@@ -274,10 +278,25 @@ namespace FacilityEscape.AI.Sentinel
 
         private bool Drive(Vector3 destination)
         {
-            if (requestedDestination == destination && (agent.pathPending ||
-                agent.pathStatus == NavMeshPathStatus.PathComplete))
-                return true;
-            if (!agent.SetDestination(destination)) return false;
+            if (failedDestination == destination && Time.time < retryMoveAt) return false;
+            if (requestedDestination == destination)
+            {
+                if (!progress.IsBlocked(agent) && (agent.pathPending ||
+                    agent.pathStatus == NavMeshPathStatus.PathComplete)) return true;
+                Stop();
+                failedDestination = destination;
+                retryMoveAt = Time.time + 1f;
+                return false;
+            }
+            if (!agent.CalculatePath(destination, candidatePath) ||
+                candidatePath.status != NavMeshPathStatus.PathComplete)
+            {
+                failedDestination = destination;
+                retryMoveAt = Time.time + 1f;
+                return false;
+            }
+            if (!agent.SetPath(candidatePath)) return false;
+            progress.Reset();
             agent.isStopped = false;
             requestedDestination = destination;
             return true;
@@ -293,6 +312,7 @@ namespace FacilityEscape.AI.Sentinel
         {
             if (!agent.isStopped || agent.hasPath) agent.ResetPath();
             agent.isStopped = true;
+            progress.Reset();
             requestedDestination = null;
         }
 
