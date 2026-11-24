@@ -36,7 +36,9 @@ public class Door : MonoBehaviour, IInteractable
         }
 
         isOpen = !isOpen;
-        if (obstacle != null) obstacle.enabled = !isOpen;
+        // Closing blocks navigation immediately. Opening keeps the blocker until
+        // the physical panel is nearly at its open rotation.
+        UpdateNavigationBlocker();
         Sfx.Play(isOpen ? SfxId.DoorOpen : SfxId.DoorClose, transform.position);
     }
 
@@ -45,7 +47,15 @@ public class Door : MonoBehaviour, IInteractable
     private void Update()
     {
         Quaternion target = isOpen ? openRot : closedRot;
-        if (Quaternion.Angle(transform.localRotation, target) < 0.1f) return;
-        transform.localRotation = Quaternion.Slerp(transform.localRotation, target, Time.deltaTime * speed);
+        if (Quaternion.Angle(transform.localRotation, target) >= 0.1f)
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, target, Time.deltaTime * speed);
+        UpdateNavigationBlocker();
+    }
+
+    private void UpdateNavigationBlocker()
+    {
+        if (obstacle == null) return;
+        bool shouldBlock = !isOpen || Quaternion.Angle(transform.localRotation, openRot) > 0.5f;
+        if (obstacle.enabled != shouldBlock) obstacle.enabled = shouldBlock;
     }
 }
