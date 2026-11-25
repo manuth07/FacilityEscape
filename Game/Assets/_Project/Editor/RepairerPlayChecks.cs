@@ -21,7 +21,15 @@ public static class RepairerPlayChecks
     private static double deadline;
     private static string expectation;
 
-    static RepairerPlayChecks() => EditorApplication.update += Tick;
+    static RepairerPlayChecks()
+    {
+        EditorApplication.update += Tick;
+        EditorApplication.playModeStateChanged += state =>
+        {
+            if (state == PlayModeStateChange.ExitingPlayMode && SessionState.GetBool(Key, false))
+                ClearRun();
+        };
+    }
 
     [MenuItem("Tools/Repairer/Run showcase checks")]
     public static void Run()
@@ -151,14 +159,67 @@ public static class RepairerPlayChecks
         yield return Until("robot returns home", () => Vector3.Distance(robot.transform.position, home.position) < 0.4f);
         Require(RepairerScoring.RetreatMarker(6f, 4f, true) > RepairerScoring.RetreatMarker(6f, 4f, false),
             "cover improves otherwise equal retreat candidates");
+
+        var previous = demo;
+        demo.Restart(RepairerDemo.Scenario.Competing);
+        yield return Until("competing scenario loads in Play Mode", () => !previous &&
+            Object.FindFirstObjectByType<RepairerDemo>() && GameObject.Find("Maintenance drone"));
+        demo = Object.FindFirstObjectByType<RepairerDemo>();
+        var contender = GameObject.Find("Maintenance drone").GetComponent<Health>();
+        int before = contender.CurrentHealth;
+        demo.DamageCompetitor();
+        Require(contender.CurrentHealth < before, "competing ally damage control");
+
+        previous = demo;
+        demo.Restart(RepairerDemo.Scenario.Blocked);
+        yield return Until("blocked scenario loads in Play Mode", () => !previous &&
+            GameObject.Find("Retractable maintenance barrier"));
+        demo = Object.FindFirstObjectByType<RepairerDemo>();
+        robot = Object.FindFirstObjectByType<RepairerAI>();
+        sentinel = GameObject.Find("Sentinel").GetComponent<Health>();
+        damaged = sentinel.CurrentHealth;
+        float settle = Time.time + 1f;
+        yield return Until("carved gate rejects repair while closed", () => Time.time > settle &&
+            robot.RepairTarget == null && sentinel.CurrentHealth == damaged && robot.Status?.Contains("reachable") == true);
+        demo.ToggleBarrier();
+        yield return Until("opening the gate restores healing", () => sentinel.CurrentHealth > damaged);
+        previous = demo;
+        demo.Restart(RepairerDemo.Scenario.Single);
+        yield return Until("reset clears scenario objects", () => !previous &&
+            Object.FindFirstObjectByType<RepairerDemo>() && !GameObject.Find("Retractable maintenance barrier"));
+        robot = Object.FindFirstObjectByType<RepairerAI>();
+        agent = robot.GetComponent<NavMeshAgent>();
+        var north = GameObject.Find("Retreat marker").transform;
+        home = GameObject.Find("Safe point").transform;
+        SoundEvents.Emit(north.position, 30f, isGunfire: true);
+        yield return Until("shot from north selects southern refuge or holds if both are closer", () =>
+            robot.ThreatSeconds > 0 && robot.SelectedAction == RepairerAction.Hold);
+        // Stand between the two refuges so each source has one escape destination farther away.
+        Require(agent.Warp((north.position + home.position) * 0.5f), "midpoint is on the navigation mesh");
+        SoundEvents.Emit(north.position, 30f, isGunfire: true);
+        yield return Until("northern shot selects home-side refuge", () =>
+            robot.SelectedAction == RepairerAction.Escape && Vector3.Distance(agent.destination, home.position) < 0.6f);
+        SoundEvents.Emit(home.position, 30f, isGunfire: true);
+        yield return Until("southern shot selects northern refuge", () =>
+            robot.SelectedAction == RepairerAction.Escape && Vector3.Distance(agent.destination, north.position) < 0.6f);
+        north.gameObject.SetActive(false);
+        home.gameObject.SetActive(false);
+        SoundEvents.Emit(robot.transform.position, 30f, isGunfire: true);
+        yield return Until("threat without a reachable refuge holds fire and healing", () =>
+            robot.SelectedAction == RepairerAction.Hold && robot.ActiveRepairTarget == null);
     }
 
-    private static void Finish(bool passed)
+    private static void ClearRun()
     {
         EditorApplication.UnlockReloadAssemblies();
         SessionState.SetBool(Key, false);
         condition = null;
         sequence = null;
+    }
+
+    private static void Finish(bool passed)
+    {
+        ClearRun();
         Debug.Log("Repairer suite " + (passed ? "PASS" : "FAIL"));
         if (Application.isBatchMode) EditorApplication.Exit(passed ? 0 : 1);
         else EditorApplication.ExitPlaymode();

@@ -482,12 +482,16 @@ PrefabInstance:
       objectReference: {fileID: 727719402}
     - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
       propertyPath: retreatMarkers.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
       propertyPath: 'retreatMarkers.Array.data[0]'
       value: 
       objectReference: {fileID: 1221722735}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: 'retreatMarkers.Array.data[1]'
+      value:
+      objectReference: {fileID: 727719402}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
