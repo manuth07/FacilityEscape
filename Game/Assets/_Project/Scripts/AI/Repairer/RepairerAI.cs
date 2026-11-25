@@ -18,6 +18,8 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private CharacterController playerCollider;
         [SerializeField] private bool showDiagnostics;
 
+        [SerializeField, Range(0f, 0.25f)] private float targetSwitchMargin = 0.07f;
+
         private const float DecisionInterval = 0.15f;
         private const float ArrivalDistance = 0.25f;
         private NavMeshPath path;
@@ -178,6 +180,8 @@ namespace FacilityEscape.AI.Repairer
             Health best = null;
             destination = default;
             bool unreachable = false;
+            float incumbentScore = -1f;
+            Vector3 incumbentPosition = default;
             foreach (var marker in RepairableAlly.Registered)
             {
                 if (marker == null) continue;
@@ -194,12 +198,23 @@ namespace FacilityEscape.AI.Repairer
 
                 float missing = 1f - (float)ally.CurrentHealth / ally.MaxHealth;
                 float score = RepairerScoring.Repair(missing, length);
+                if (ally == repairTarget)
+                {
+                    incumbentScore = score;
+                    incumbentPosition = approach;
+                }
                 if (score <= RepairScore) continue;
                 best = ally;
                 destination = approach;
                 RepairScore = score;
             }
 
+            if (incumbentScore >= 0f && RepairScore <= incumbentScore + targetSwitchMargin)
+            {
+                destination = incumbentPosition;
+                RepairScore = incumbentScore;
+                return repairTarget;
+            }
             if (best == null)
                 Status = unreachable ? "No complete path into repair range" : "No damaged ally";
             return best;
