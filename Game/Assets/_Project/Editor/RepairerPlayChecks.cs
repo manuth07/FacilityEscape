@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
 // Runs the same gameplay sequence from the Tools menu and the batch-mode entry point.
@@ -20,13 +21,22 @@ public static class RepairerPlayChecks
     private static Func<bool> condition;
     private static double deadline;
     private static string expectation;
+    private static InputDevice[] suspendedDevices = Array.Empty<InputDevice>();
 
     static RepairerPlayChecks()
     {
         EditorApplication.update += Tick;
         EditorApplication.playModeStateChanged += state =>
         {
-            if (state == PlayModeStateChange.ExitingPlayMode && SessionState.GetBool(Key, false))
+            if (!SessionState.GetBool(Key, false)) return;
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                // A held menu click must not fire the gun or move the camera during the suite.
+                suspendedDevices = InputSystem.devices.Where(device => device.enabled &&
+                    (device is Mouse || device is Keyboard)).ToArray();
+                foreach (var device in suspendedDevices) InputSystem.DisableDevice(device, keepSendingEvents: true);
+            }
+            else if (state == PlayModeStateChange.ExitingPlayMode)
                 ClearRun();
         };
     }
@@ -95,11 +105,19 @@ public static class RepairerPlayChecks
         var hitboxes = robot.GetComponentsInChildren<Collider>().Where(c => c.enabled && !c.isTrigger).ToArray();
         Require(hitboxes.Length == 1 && hitboxes[0].name == "Body", "only Body receives solid hits");
         var gun = Object.FindFirstObjectByType<PulseGun>();
-        var camera = Camera.main;
+        var camera = (Camera)new SerializedObject(gun).FindProperty("playerCamera").objectReferenceValue;
+        Require(camera && camera.isActiveAndEnabled, "PulseGun references an active camera");
         camera.transform.LookAt(hitboxes[0].bounds.center);
         Physics.SyncTransforms();
         int initial = hp.CurrentHealth;
-        Require(gun.TryFire() && hp.CurrentHealth < initial, "center-screen PulseGun hit reduces Repairer HP");
+        int shotsBefore = gun.ShotsFired;
+        bool fired = gun.TryFire();
+        Require(fired && gun.ShotsFired == shotsBefore + 1,
+            $"controlled PulseGun shot fired (count {shotsBefore} → {gun.ShotsFired}, " +
+            $"gun enabled {gun.isActiveAndEnabled}, gameplay allowed {FacilityEscape.Gameplay.GameFlowController.GameplayAllowed})");
+        Require(hp.CurrentHealth < initial,
+            $"center-screen PulseGun hit reduces Repairer HP (HP {initial} → {hp.CurrentHealth}, " +
+            $"camera {camera.name}, target {hitboxes[0].name} at {hitboxes[0].bounds.center})");
         var block = new MaterialPropertyBlock();
         bool Flashed()
         {
@@ -114,7 +132,13 @@ public static class RepairerPlayChecks
         yield return Until("damage flash clears", () => !Flashed());
         Require(hp.Heal(int.MaxValue) && hp.CurrentHealth == hp.MaxHealth && !hp.Heal(1), "healing caps at maximum");
 
-        yield return Until("initial gunfire expires", () => robot.ThreatSeconds <= 0f);
+        yield return Until("initial gunfire expires", () =>
+        {
+            if (gun.ShotsFired != shotsBefore + 1)
+                throw new Exception($"Unexpected additional PulseGun fire while waiting for threat expiry " +
+                    $"(expected {shotsBefore + 1} total, observed {gun.ShotsFired}, threat {robot.ThreatSeconds:F2}s).");
+            return robot.ThreatSeconds <= 0f;
+        });
         demo.ToggleSentinelReachability();
         demo.DamageSentinel();
         int damaged = sentinel.CurrentHealth;
@@ -211,6 +235,9 @@ public static class RepairerPlayChecks
 
     private static void ClearRun()
     {
+        foreach (var device in suspendedDevices)
+            if (device.added) InputSystem.EnableDevice(device);
+        suspendedDevices = Array.Empty<InputDevice>();
         EditorApplication.UnlockReloadAssemblies();
         SessionState.SetBool(Key, false);
         condition = null;
