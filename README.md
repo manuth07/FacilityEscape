@@ -61,7 +61,7 @@ Ship the entire player folder, including the executable, `FacilityEscape_Data`, 
 
 ## Known limitations and assessment evidence
 
-- No original `.blend`, Maya source or original imported model pair is present in `ArtSource/Blender` / `_Project/Models`. Barking Dog modular meshes are third-party assets; robot, weapon and battery assemblies use Unity primitives and are not Blender-authored models. The requirement for two original authored models remains outstanding.
+- The original Repairer and Power Cell Blender files are in `ArtSource/Blender/`, with Unity FBX exports in `_Project/Models/`. Both scenes use the custom Repairer prefab. `RepairerDemo` displays the custom Power Cell FBX, and the factory retains its scene-authored pickup visuals. See [Repairer implementation and viva guide](Docs/repairer-viva.md).
 - The main scene has an existing baked NavMesh, but no baked lightmaps. Lighting is realtime/ambient. There is no skeletal Animator setup; navigation, turning and some procedural feedback/motion are implemented in scripts. Do not present this as a complete character-animation pipeline.
 - CharacterController environment collision, Rigidbody crate pushing and throwable physics are implemented. Visual art generally uses disabled decorative colliders over greybox layout colliders.
 - Targeted MCP-assisted checks and a standalone smoke test do not replace a full manual combat/mission playthrough or multi-machine compatibility testing. See the release notes for exactly what was exercised.

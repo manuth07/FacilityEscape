@@ -14,6 +14,7 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private Transform shoulder;
         private Quaternion idlePose;
         private float extension;
+        private float idleWeight;
 
         private RepairerAI repairer;
         private Health health;
@@ -86,7 +87,11 @@ namespace FacilityEscape.AI.Repairer
             {
                 extension = Mathf.MoveTowards(extension, target ? 1f : 0f, 4f * Time.deltaTime);
                 float eased = Mathf.SmoothStep(0f, 1f, extension);
-                shoulder.localRotation = idlePose * Quaternion.AngleAxis(-24f * eased, Vector3.right);
+                bool resting = !target && repairer.SelectedAction == RepairerAction.Hold &&
+                    repairer.ThreatSeconds <= 0f;
+                idleWeight = Mathf.MoveTowards(idleWeight, resting ? 1f : 0f, 3f * Time.deltaTime);
+                float idlePitch = 1.5f * idleWeight * Mathf.Sin(Time.time * 2f);
+                shoulder.localRotation = idlePose * Quaternion.AngleAxis(-24f * eased + idlePitch, Vector3.right);
             }
             beam.enabled = target != null;
             if (target == null) return;
@@ -100,6 +105,7 @@ namespace FacilityEscape.AI.Repairer
         {
             ClearFlash();
             extension = 0f;
+            idleWeight = 0f;
             if (shoulder) shoulder.localRotation = idlePose;
             if (beam != null) beam.enabled = false;
         }
