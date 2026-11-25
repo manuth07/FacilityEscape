@@ -44,11 +44,15 @@ namespace FacilityEscape.AI.Repairer
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(12, 12, 350, 190), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(12, 12, 420, 260), GUI.skin.box);
             GUILayout.Label($"Selected action: {repairer.SelectedAction}");
+            GUILayout.Label($"Ally: {(repairer.RepairTarget ? repairer.RepairTarget.name : "none")}    Threat: {repairer.ThreatSeconds:F1} s");
+            ScoreRow("Hold", repairer.HoldScore, RepairerAction.Hold);
             ScoreRow("Repair", repairer.RepairScore, RepairerAction.Repair);
             ScoreRow("Escape", repairer.EscapeScore, RepairerAction.Escape);
             ScoreRow("Return", repairer.ReturnScore, RepairerAction.Return);
+            var robotHealth = repairer.GetComponent<Health>();
+            GUILayout.Label($"Repairer HP: {robotHealth.CurrentHealth}/{robotHealth.MaxHealth}");
             GUILayout.Label($"Sentinel HP: {sentinel.CurrentHealth}/{sentinel.MaxHealth}");
             if (!string.IsNullOrEmpty(repairer.Status)) GUILayout.Label(repairer.Status);
             GUILayout.Label("1  Damage Sentinel   |   2  Toggle isolated island");

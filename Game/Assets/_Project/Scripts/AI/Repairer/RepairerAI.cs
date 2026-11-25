@@ -46,6 +46,7 @@ namespace FacilityEscape.AI.Repairer
             repairTarget.CurrentHealth < repairTarget.MaxHealth ? repairTarget : null;
         public Health RepairTarget => repairTarget;
         public float LastHealTime { get; private set; } = float.NegativeInfinity;
+        public float ThreatSeconds => Mathf.Max(0f, threatUntil - Time.time);
         public float ThreatLevel => Time.time < threatUntil
             ? Mathf.Clamp01((threatUntil - Time.time) / threatDuration) : 0f;
         public bool CanRepairCurrentTarget => isActiveAndEnabled && health != null &&
@@ -221,7 +222,7 @@ namespace FacilityEscape.AI.Repairer
                 return repairTarget;
             }
             if (best == null)
-                Status = unreachable ? "No complete path into repair range" : "No damaged ally";
+                Status = unreachable ? "No reachable, unobstructed repair position" : "No damaged ally";
             return best;
         }
 
