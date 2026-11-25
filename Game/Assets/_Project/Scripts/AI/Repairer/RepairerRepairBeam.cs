@@ -11,6 +11,10 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private LineRenderer beam;
         [SerializeField] private Vector3 targetOffset = new(0f, 0.8f, 0f);
 
+        [SerializeField] private Transform shoulder;
+        private Quaternion idlePose;
+        private float extension;
+
         private RepairerAI repairer;
         private Health health;
         private int previousHp;
@@ -69,6 +73,7 @@ namespace FacilityEscape.AI.Repairer
         private void Awake()
         {
             repairer = GetComponent<RepairerAI>();
+            if (shoulder) idlePose = shoulder.localRotation;
             if (beam == null) enabled = false;
             else beam.enabled = false;
         }
@@ -77,6 +82,12 @@ namespace FacilityEscape.AI.Repairer
         {
             UpdateHitFlash();
             var target = repairer.ActiveRepairTarget;
+            if (shoulder)
+            {
+                extension = Mathf.MoveTowards(extension, target ? 1f : 0f, 4f * Time.deltaTime);
+                float eased = Mathf.SmoothStep(0f, 1f, extension);
+                shoulder.localRotation = idlePose * Quaternion.AngleAxis(-24f * eased, Vector3.right);
+            }
             beam.enabled = target != null;
             if (target == null) return;
 
@@ -88,6 +99,8 @@ namespace FacilityEscape.AI.Repairer
         private void OnDisable()
         {
             ClearFlash();
+            extension = 0f;
+            if (shoulder) shoulder.localRotation = idlePose;
             if (beam != null) beam.enabled = false;
         }
     }

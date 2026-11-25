@@ -78,6 +78,8 @@ public static class RepairerPlayChecks
         var demo = Object.FindFirstObjectByType<RepairerDemo>();
         var robot = Object.FindFirstObjectByType<RepairerAI>();
         var agent = robot.GetComponent<NavMeshAgent>();
+        var shoulder = robot.GetComponentsInChildren<Transform>().Single(t => t.name == "Repairer_Arm");
+        var idle = shoulder.localRotation;
         var hp = robot.GetComponent<Health>();
         var sentinel = GameObject.Find("Sentinel").GetComponent<Health>();
         var line = robot.GetComponentInChildren<LineRenderer>(true);
@@ -114,6 +116,10 @@ public static class RepairerPlayChecks
         demo.ToggleSentinelReachability();
         yield return Until("reconnected route delivers healing", () => sentinel.CurrentHealth > damaged && line.enabled);
 
+        yield return Until("shoulder moves and the beam follows its emitter", () =>
+            line.enabled && Quaternion.Angle(idle, shoulder.localRotation) > 5f &&
+            line.transform.IsChildOf(shoulder) && Vector3.Distance(line.GetPosition(0), line.transform.position) < 0.03f);
+
         var rival = new GameObject("Competing test ally");
         Vector3 away = (robot.transform.position - sentinel.transform.position).normalized;
         rival.transform.position = robot.transform.position + away * 1.25f;
@@ -137,6 +143,7 @@ public static class RepairerPlayChecks
         yield return Until("gunfire interrupts beam and causes retreat", () =>
             robot.SelectedAction == RepairerAction.Escape && !line.enabled &&
             Vector3.Distance(shot, robot.transform.position) > 0.35f);
+        yield return Until("shoulder retracts on retreat", () => Quaternion.Angle(idle, shoulder.localRotation) < 0.5f);
         Require(sentinel.CurrentHealth == interrupted, "no healing while retreating");
         yield return Until("repair resumes after threat expires", () => sentinel.CurrentHealth > interrupted && line.enabled);
         yield return Until("full ally releases beam", () => sentinel.CurrentHealth == sentinel.MaxHealth && !line.enabled);
