@@ -93,10 +93,11 @@ namespace FacilityEscape.AI.Repairer
         private void Update()
         {
             if (health == null || health.IsDestroyed) return;
-            if (progress.IsBlocked(agent))
+            if (agent.enabled && agent.isOnNavMesh &&
+                (agent.hasPath && agent.isPathStale || progress.IsBlocked(agent)))
             {
                 blockedAlly = repairTarget;
-                retryAllyAt = Time.time + 2f;
+                retryAllyAt = Time.time + 0.75f;
                 repairTarget = null;
                 SelectedAction = RepairerAction.Hold;
                 Status = "Movement blocked; reevaluating";
@@ -186,9 +187,13 @@ namespace FacilityEscape.AI.Repairer
             {
                 if (marker == null) continue;
                 Health ally = marker.Health;
-                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth ||
-                    (ally == blockedAlly && Time.time < retryAllyAt))
+                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth)
                     continue;
+                if (ally == blockedAlly && Time.time < retryAllyAt)
+                {
+                    unreachable = true;
+                    continue;
+                }
 
                 if (!FindApproach(ally, out Vector3 approach, out float length))
                 {
@@ -330,7 +335,8 @@ namespace FacilityEscape.AI.Repairer
             agent.isStopped = false;
             if ((agent.nextPosition - destination).sqrMagnitude <= ArrivalDistance * ArrivalDistance)
                 agent.ResetPath();
-            else if (!agent.hasPath || (agent.destination - destination).sqrMagnitude > 0.01f)
+            else if (!agent.hasPath || agent.isPathStale || agent.pathStatus != NavMeshPathStatus.PathComplete ||
+                     (agent.destination - destination).sqrMagnitude > 0.01f)
                 agent.SetDestination(destination);
         }
 
