@@ -18,6 +18,8 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private CharacterController playerCollider;
         [SerializeField] private bool showDiagnostics;
 
+        [SerializeField, Range(0f, 0.25f)] private float targetSwitchMargin = 0.07f;
+
         private const float DecisionInterval = 0.15f;
         private const float ArrivalDistance = 0.25f;
         private NavMeshPath path;
@@ -44,6 +46,7 @@ namespace FacilityEscape.AI.Repairer
             repairTarget.CurrentHealth < repairTarget.MaxHealth ? repairTarget : null;
         public Health RepairTarget => repairTarget;
         public float LastHealTime { get; private set; } = float.NegativeInfinity;
+        public float ThreatSeconds => Mathf.Max(0f, threatUntil - Time.time);
         public float ThreatLevel => Time.time < threatUntil
             ? Mathf.Clamp01((threatUntil - Time.time) / threatDuration) : 0f;
         public bool CanRepairCurrentTarget => isActiveAndEnabled && health != null &&
@@ -91,10 +94,11 @@ namespace FacilityEscape.AI.Repairer
         private void Update()
         {
             if (health == null || health.IsDestroyed) return;
-            if (progress.IsBlocked(agent))
+            if (agent.enabled && agent.isOnNavMesh &&
+                (agent.hasPath && agent.isPathStale || progress.IsBlocked(agent)))
             {
                 blockedAlly = repairTarget;
-                retryAllyAt = Time.time + 2f;
+                retryAllyAt = Time.time + 0.75f;
                 repairTarget = null;
                 SelectedAction = RepairerAction.Hold;
                 Status = "Movement blocked; reevaluating";
@@ -178,13 +182,19 @@ namespace FacilityEscape.AI.Repairer
             Health best = null;
             destination = default;
             bool unreachable = false;
+            float incumbentScore = -1f;
+            Vector3 incumbentPosition = default;
             foreach (var marker in RepairableAlly.Registered)
             {
                 if (marker == null) continue;
                 Health ally = marker.Health;
-                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth ||
-                    (ally == blockedAlly && Time.time < retryAllyAt))
+                if (!marker.isActiveAndEnabled || !ValidAlly(ally) || ally.CurrentHealth >= ally.MaxHealth)
                     continue;
+                if (ally == blockedAlly && Time.time < retryAllyAt)
+                {
+                    unreachable = true;
+                    continue;
+                }
 
                 if (!FindApproach(ally, out Vector3 approach, out float length))
                 {
@@ -194,14 +204,25 @@ namespace FacilityEscape.AI.Repairer
 
                 float missing = 1f - (float)ally.CurrentHealth / ally.MaxHealth;
                 float score = RepairerScoring.Repair(missing, length);
+                if (ally == repairTarget)
+                {
+                    incumbentScore = score;
+                    incumbentPosition = approach;
+                }
                 if (score <= RepairScore) continue;
                 best = ally;
                 destination = approach;
                 RepairScore = score;
             }
 
+            if (incumbentScore >= 0f && RepairScore <= incumbentScore + targetSwitchMargin)
+            {
+                destination = incumbentPosition;
+                RepairScore = incumbentScore;
+                return repairTarget;
+            }
             if (best == null)
-                Status = unreachable ? "No complete path into repair range" : "No damaged ally";
+                Status = unreachable ? "No reachable, unobstructed repair position" : "No damaged ally";
             return best;
         }
 
@@ -234,15 +255,24 @@ namespace FacilityEscape.AI.Repairer
         private bool FindRetreat(out Vector3 destination)
         {
             destination = default;
-            float bestDistance = (agent.nextPosition - lastGunfire.Position).sqrMagnitude + 0.25f;
+            float currentSeparation = Vector3.Distance(agent.nextPosition, lastGunfire.Position);
+            float bestScore = -1f;
             bool found = false;
             if (retreatMarkers == null) return false;
             foreach (Transform marker in retreatMarkers)
             {
-                if (marker == null || !TryPath(marker.position, out Vector3 point, out _)) continue;
-                float distance = (point - lastGunfire.Position).sqrMagnitude;
-                if (distance <= bestDistance) continue;
-                bestDistance = distance;
+                if (marker == null || !marker.gameObject.activeInHierarchy ||
+                    !TryPath(marker.position, out Vector3 point, out float travel)) continue;
+                float separation = Vector3.Distance(point, lastGunfire.Position);
+                if (separation <= currentSeparation + 0.1f) continue;
+                Vector3 eye = point + Vector3.up * 0.8f;
+                Vector3 source = lastGunfire.Position + Vector3.up * 0.8f;
+                bool covered = Physics.Linecast(eye, source, out var hit, Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Ignore) && !hit.transform.IsChildOf(transform) &&
+                    hit.collider.GetComponentInParent<CharacterController>() == null;
+                float score = RepairerScoring.RetreatMarker(separation, travel, covered);
+                if (score <= bestScore) continue;
+                bestScore = score;
                 destination = point;
                 found = true;
             }
@@ -315,7 +345,8 @@ namespace FacilityEscape.AI.Repairer
             agent.isStopped = false;
             if ((agent.nextPosition - destination).sqrMagnitude <= ArrivalDistance * ArrivalDistance)
                 agent.ResetPath();
-            else if (!agent.hasPath || (agent.destination - destination).sqrMagnitude > 0.01f)
+            else if (!agent.hasPath || agent.isPathStale || agent.pathStatus != NavMeshPathStatus.PathComplete ||
+                     (agent.destination - destination).sqrMagnitude > 0.01f)
                 agent.SetDestination(destination);
         }
 

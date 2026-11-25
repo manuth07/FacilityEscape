@@ -16,6 +16,13 @@ namespace FacilityEscape.AI.Repairer
             return 0.9f + 0.05f * Mathf.Clamp01(proximity) + 0.05f * Mathf.Clamp01(freshness);
         }
 
+        public static float RetreatMarker(float separation, float travel, bool covered)
+        {
+            float safety = separation / (separation + 5f);
+            float economy = 1f / (1f + travel / 5f);
+            return 0.5f * safety + 0.25f * economy + (covered ? 0.25f : 0f);
+        }
+
         public static float Return(float pathLength)
         {
             return Mathf.Clamp01(pathLength / 8f);

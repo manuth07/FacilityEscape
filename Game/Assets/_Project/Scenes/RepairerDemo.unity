@@ -472,18 +472,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8279429497468604539, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: m_AgentTypeID
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
       propertyPath: safePoint
       value: 
       objectReference: {fileID: 727719402}
     - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
       propertyPath: retreatMarkers.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
       propertyPath: 'retreatMarkers.Array.data[0]'
       value: 
       objectReference: {fileID: 1221722735}
+    - target: {fileID: 9221851916606961677, guid: 6a4a70a1d2e607245877dcfd79947ceb, type: 3}
+      propertyPath: 'retreatMarkers.Array.data[1]'
+      value:
+      objectReference: {fileID: 727719402}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -785,6 +793,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairerDemo
   repairer: {fileID: 497585111}
+  powerCellModel: {fileID: 919132149155446097, guid: ffdc01c1f5f409c42abbfba31cc44822, type: 3}
+  displayLight: {fileID: 360766017}
   sentinel: {fileID: 1463322485}
   isolatedPosition: {fileID: 1752320567}
   sentinelGuard: {fileID: 1365313884}
