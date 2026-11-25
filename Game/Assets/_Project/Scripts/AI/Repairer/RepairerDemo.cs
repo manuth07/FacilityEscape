@@ -11,15 +11,33 @@ namespace FacilityEscape.AI.Repairer
         [SerializeField] private Health sentinel;
         [SerializeField] private Transform isolatedPosition;
         [SerializeField] private Transform sentinelGuard;
+        [SerializeField] private GameObject powerCellModel;
+        [SerializeField] private Light displayLight;
+        private float normalLightIntensity;
+        private bool dimLight;
         private Vector3 originalPosition;
         private bool sentinelIsIsolated;
 
-        private void Start() => originalPosition = sentinel.transform.position;
+        private void Start()
+        {
+            originalPosition = sentinel.transform.position;
+            if (powerCellModel)
+                Instantiate(powerCellModel, new Vector3(-1f, 0.5f, -3f), Quaternion.identity, transform);
+            if (displayLight) normalLightIntensity = displayLight.intensity;
+        }
+
+        public void ToggleDisplayLight()
+        {
+            if (!displayLight) return;
+            dimLight = !dimLight;
+            displayLight.intensity = normalLightIntensity * (dimLight ? 0.08f : 1f);
+        }
 
         private void Update()
         {
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
+            if (keyboard.lKey.wasPressedThisFrame) ToggleDisplayLight();
             if (keyboard.digit1Key.wasPressedThisFrame) DamageSentinel();
             if (keyboard.digit2Key.wasPressedThisFrame) ToggleSentinelReachability();
         }
@@ -56,7 +74,7 @@ namespace FacilityEscape.AI.Repairer
             GUILayout.Label($"Sentinel HP: {sentinel.CurrentHealth}/{sentinel.MaxHealth}");
             if (!string.IsNullOrEmpty(repairer.Status)) GUILayout.Label(repairer.Status);
             GUILayout.Label("1  Damage Sentinel   |   2  Toggle isolated island");
-            GUILayout.Label("Left click  Fire pulse gun");
+            GUILayout.Label("Left click  Fire pulse gun   |   L  Compare lighting");
             GUILayout.EndArea();
         }
 

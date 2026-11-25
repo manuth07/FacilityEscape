@@ -789,6 +789,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FacilityEscape.AI.Repairer.RepairerDemo
   repairer: {fileID: 497585111}
+  powerCellModel: {fileID: 919132149155446097, guid: ffdc01c1f5f409c42abbfba31cc44822, type: 3}
+  displayLight: {fileID: 360766017}
   sentinel: {fileID: 1463322485}
   isolatedPosition: {fileID: 1752320567}
   sentinelGuard: {fileID: 1365313884}
