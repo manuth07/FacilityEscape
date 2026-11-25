@@ -23,6 +23,8 @@ namespace FacilityEscape.AI.Repairer
         private Health competingAlly;
         private GameObject barrier;
         private bool resetting;
+        private Health repairerHealth;
+        private GUIStyle instructionStyle;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetScenario() => nextScenario = Scenario.Single;
@@ -85,6 +87,7 @@ namespace FacilityEscape.AI.Repairer
 
         private void Start()
         {
+            repairerHealth = repairer.GetComponent<Health>();
             originalPosition = sentinel.transform.position;
             PrepareScenario();
             if (powerCellModel)
@@ -134,17 +137,24 @@ namespace FacilityEscape.AI.Repairer
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(12, 12, Mathf.Min(440f, Screen.width - 24f), 340), GUI.skin.box);
+            instructionStyle ??= new GUIStyle(GUI.skin.label) { wordWrap = true };
+            GUILayout.BeginArea(new Rect(12, 12, Mathf.Min(440f, Screen.width - 24f), Mathf.Min(384f, Screen.height - 24f)), GUI.skin.box);
             GUILayout.Label($"Repairer showcase  |  {nextScenario}");
             GUILayout.Label("F1 Single   F2 Competing   F3 Blocked   R Reset");
+            string instruction = nextScenario switch
+            {
+                Scenario.Competing => "Press 3 to make the maintenance drone more urgent. Watch the selected ally.",
+                Scenario.Blocked => "Press B to open the barrier. Watch for healing to start when the route clears.",
+                _ => "Press 1 to start a repair. Fire nearby to interrupt it and watch the Repairer retreat."
+            };
+            GUILayout.Label(instruction, instructionStyle);
             GUILayout.Label($"Selected action: {repairer.SelectedAction}");
             GUILayout.Label($"Ally: {(repairer.RepairTarget ? repairer.RepairTarget.name : "none")}    Threat: {repairer.ThreatSeconds:F1} s");
             ScoreRow("Hold", repairer.HoldScore, RepairerAction.Hold);
             ScoreRow("Repair", repairer.RepairScore, RepairerAction.Repair);
             ScoreRow("Escape", repairer.EscapeScore, RepairerAction.Escape);
             ScoreRow("Return", repairer.ReturnScore, RepairerAction.Return);
-            var robotHealth = repairer.GetComponent<Health>();
-            GUILayout.Label($"Repairer HP: {robotHealth.CurrentHealth}/{robotHealth.MaxHealth}");
+            GUILayout.Label($"Repairer HP: {repairerHealth.CurrentHealth}/{repairerHealth.MaxHealth}");
             GUILayout.Label($"Sentinel HP: {sentinel.CurrentHealth}/{sentinel.MaxHealth}");
             if (competingAlly)
                 GUILayout.Label($"Maintenance drone: {competingAlly.CurrentHealth}/{competingAlly.MaxHealth}    3  Damage drone");
